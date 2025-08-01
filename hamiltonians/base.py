@@ -1,3 +1,4 @@
+import torch
 from ..operators import Operators
 
 
@@ -49,3 +50,4 @@ class Hamiltonian(ABC, Operators):
         """
 
         pass
+
