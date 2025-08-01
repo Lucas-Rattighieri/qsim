@@ -9,7 +9,6 @@ class Hamiltonian(ABC, Operators):
     operators and their time evolution on quantum state vectors.
 
     Attributes:
-        tmpindices (torch.Tensor): Temporary tensor for internal index operations.
         tmppsi1 (torch.Tensor): Temporary tensor for intermediate quantum state calculations.
         tmppsi2 (torch.Tensor): Temporary tensor for intermediate quantum state calculations.
     """
@@ -17,7 +16,6 @@ class Hamiltonian(ABC, Operators):
 
     def __init__(self, L: int, device = "cpu"):
         super().__init__(L, device)
-        self.tmpindices = torch.empty_like(self.tmp)
         self.tmppsi1 = torch.zeros(self.dim, dtype=self.dtype, device=device)
         self.tmppsi2 = torch.zeros(self.dim, dtype=self.dtype, device=device)
 
@@ -49,4 +47,5 @@ class Hamiltonian(ABC, Operators):
         Returns:
             torch.Tensor: Quantum state vector after evolution.
         """
+
         pass
