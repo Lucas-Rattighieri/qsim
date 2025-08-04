@@ -15,8 +15,8 @@ class Hamiltonian(ABC, Operators):
     """
 
 
-    def __init__(self, L: int, device = "cpu"):
-        super().__init__(L, device)
+    def __init__(self, L: int, device = "cpu", indices: torch.Tensor = None):
+        super().__init__(L, device, indices)
         self.tmppsi1 = torch.zeros(self.dim, dtype=self.dtype, device=device)
         self.tmppsi2 = torch.zeros(self.dim, dtype=self.dtype, device=device)
 
