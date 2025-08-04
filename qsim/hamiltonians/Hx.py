@@ -16,7 +16,7 @@ class Hx(Hamiltonian):
     """
 
 
-    def __init__(self, L: int, device="cpu"):
+    def __init__(self, L: int, device="cpu", indices: torch.Tensor = None):
         """
         Initializes the Hx Hamiltonian for a system of L qubits.
 
@@ -24,7 +24,7 @@ class Hx(Hamiltonian):
             L (int): Number of qubits.
             device (str, optional): Device for tensor operations (default 'cpu').
         """
-        super().__init__(L, device)
+        super().__init__(L, device, indices)
 
 
     def hamiltonian(self, psi, out=None):
