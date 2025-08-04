@@ -62,6 +62,28 @@ class States():
         return out
 
 
+    def uniform_superposition(self, out=None):
+        """
+        Generates the normalized uniform superposition over all computational basis states.
+    
+        The resulting state corresponds to:
+            (1 / sqrt(2^L)) * sum_{x=0}^{2^L - 1} |x⟩
+    
+        Parameters:
+        - out (torch.Tensor, optional): Tensor to store the output state. If None, a new tensor is allocated.
+    
+        Returns:
+        - torch.Tensor: Normalized state vector of shape (2**L,) representing the uniform superposition.
+        """
+        if out is None:
+            out = torch.ones(self.dim, dtype=self.dtype, device=self.device)
+        else:
+            out.ones_()
+    
+        out.mul_(2 ** (-self.L / 2))
+        return out
+
+
     def z_state(self, state:int, out = None) -> torch.Tensor:
         """
         Returns the computational basis state |state>.
