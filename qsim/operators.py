@@ -3,18 +3,46 @@ from .bitops import BitOps
 
 class Operators():
 
-    def __init__(self, L: int, device = "cpu"):
+    def __init__(self, L: int, device = "cpu", indices: torch.Tensor = None):
         self.device = device
         self.L = L
         self.dim = 2 ** L
         self.bitops = BitOps(L, device)
         self.dtype = torch.complex128
 
-        self.indices = self.bitops.generate_indices()
+        if self.validate_indices(indices):
+            self.indices = indices
+        else:
+            self.indices = self.bitops.generate_indices()
+            
         self.tmp = torch.zeros(self.dim, dtype=self.bitops.set_dtype(), device=device)
 
 
-    def X(self, psi: torch.Tensor, qubits, out: torch.Tensor = None):
+    def validate_indices(self, indices: torch.Tensor) -> bool:
+        """
+        Checks whether the input tensor `indices` is valid for this system.
+
+        A valid index tensor must:
+        - Be on the correct device;
+        - Have the correct dtype (matching BitOps configuration);
+        - Have length equal to 2 ** L.
+
+        Parameters:
+        - indices (torch.Tensor): The tensor to be validated.
+
+        Returns:
+        - bool: True if the tensor is valid, False otherwise.
+        """
+        if indices is None:
+            return False
+        return (
+            indices.device == torch.device(self.device)
+            and indices.dtype == self.bitops.set_dtype()
+            and indices.numel() == self.dim
+        )
+
+    
+    def X(self, psi: torch.Tensor, qubits, out: torch.Tensor = None) -> torch.Tensor:
         """
         Applies the Pauli-X (quantum NOT) gate to the quantum state vector `psi`.
 
@@ -37,7 +65,7 @@ class Operators():
         return out
 
 
-    def Z(self, psi: torch.Tensor, qubits, out: torch.Tensor = None):
+    def Z(self, psi: torch.Tensor, qubits, out: torch.Tensor = None) -> torch.Tensor:
         """
         Applies the Pauli-Z gate to the quantum state vector `psi`.
 
@@ -62,7 +90,7 @@ class Operators():
         return out
 
 
-    def Y(self, psi: torch.Tensor, qubits, out: torch.Tensor = None):
+    def Y(self, psi: torch.Tensor, qubits, out: torch.Tensor = None) -> torch.Tensor:
         """
         Applies the Pauli-Y gate to the quantum state vector `psi`.
 
@@ -91,7 +119,7 @@ class Operators():
         return out
 
 
-    def H(self, psi: torch.Tensor, qubit: int, out: torch.Tensor = None):
+    def H(self, psi: torch.Tensor, qubit: int, out: torch.Tensor = None) -> torch.Tensor:
         """
         Applies the Hadamard gate to the specified qubit of the quantum state vector `psi`.
 
@@ -128,7 +156,7 @@ class Operators():
         return out
 
 
-    def S(self, psi: torch.Tensor, qubit: int, dagger = False, out: torch.Tensor = None):
+    def S(self, psi: torch.Tensor, qubit: int, dagger = False, out: torch.Tensor = None) -> torch.Tensor:
         """
         Applies the phase gate S (or its Hermitian conjugate S† if dagger=True) to the specified qubit
         of the quantum state vector `psi`.
@@ -161,7 +189,7 @@ class Operators():
         return out
 
 
-    def Rx(self, psi: torch.Tensor, angle, qubit: int, out: torch.Tensor = None):
+    def Rx(self, psi: torch.Tensor, angle, qubit: int, out: torch.Tensor = None) -> torch.Tensor:
         """
         Applies the single-qubit rotation Rx gate by the specified angle to the given qubit
         of the quantum state vector `psi`.
@@ -200,7 +228,7 @@ class Operators():
         return out
 
 
-    def Ry(self, psi: torch.Tensor, angle, qubit: int, out: torch.Tensor = None):
+    def Ry(self, psi: torch.Tensor, angle, qubit: int, out: torch.Tensor = None) -> torch.Tensor:
         """
         Applies the single-qubit rotation Ry gate by the specified angle to the given qubit
         of the quantum state vector `psi`.
@@ -239,7 +267,7 @@ class Operators():
         return out
 
 
-    def Rz(self, psi: torch.Tensor, angle, qubit: it, out: torch.Tensor = None):
+    def Rz(self, psi: torch.Tensor, angle, qubit: it, out: torch.Tensor = None) -> torch.Tensor:
         """
         Applies the single-qubit rotation Rz gate by the specified angle to the given qubit
         of the quantum state vector `psi`.
@@ -278,7 +306,7 @@ class Operators():
         return out
 
 
-    def CNOT(self, psi: torch.Tensor, control: int, target: int, out: torch.Tensor = None):
+    def CNOT(self, psi: torch.Tensor, control: int, target: int, out: torch.Tensor = None) -> torch.Tensor:
         """
         Applies the controlled-NOT (CNOT) gate with specified control and target qubits
         to the quantum state vector `psi`.
@@ -305,7 +333,7 @@ class Operators():
         return out
 
 
-    def CZ(self, psi: torch.Tensor, control: int, target: int, out: torch.Tensor = None):
+    def CZ(self, psi: torch.Tensor, control: int, target: int, out: torch.Tensor = None) -> torch.Tensor:
         """
         Applies the controlled-Z (CZ) gate with specified control and target qubits
         to the quantum state vector `psi`.
@@ -340,7 +368,7 @@ class Operators():
         return out
 
 
-    def SWAP(self, psi: torch.Tensor, qubit_i: int, qubit_j: int, out: torch.Tensor = None):
+    def SWAP(self, psi: torch.Tensor, qubit_i: int, qubit_j: int, out: torch.Tensor = None) -> torch.Tensor:
         """
         Applies the SWAP gate, exchanging the states of two qubits in the quantum state vector `psi`.
 
@@ -363,7 +391,7 @@ class Operators():
         return out
 
 
-    def tofolli(self, psi: torch.Tensor, controls, target: int, out: torch.Tensor = None):
+    def tofolli(self, psi: torch.Tensor, controls, target: int, out: torch.Tensor = None) -> torch.Tensor:
         """
         Applies a Toffoli (CCNOT) gate with multiple control qubits and one target qubit
         to the quantum state vector `psi`.
