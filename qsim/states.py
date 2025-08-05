@@ -155,7 +155,8 @@ class States():
         self.bitops.count_bits(self.indices, out=self.tmp1)
 
         torch.bitwise_and(self.tmp1, 1, out=self.tmp2)
-        torch.add(1, self.tmp2, alpha= (1j - 1), out=out)
+        torch.mul(self.tm2, (1j - 1), out=out)
+        out.add_(1)
 
         self.tmp1.bitwise_right_shift_(1)
         self.tmp1.bitwise_and_(1)
