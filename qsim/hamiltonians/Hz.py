@@ -16,7 +16,7 @@ class Hz(Hamiltonian):
                                        for a given time.
     """
 
-    def __init__(self, L: int, device="cpu", indices: torch.Tensor = None):
+    def __init__(self, L: int, device="cpu", bitops: BitOps = None, indices: torch.Tensor = None, tmp: torch.Tensor = None):
         """
         Initializes the Hz Hamiltonian for a system with L qubits.
 
@@ -24,7 +24,7 @@ class Hz(Hamiltonian):
             L (int): Number of qubits.
             device (str, optional): Device used for tensor computations (default is "cpu").
         """
-        super().__init__(L, device, indices)
+        super().__init__(L, device, bitops, indices, tmp)
 
 
     def hamiltonian(self, psi, out=None):
