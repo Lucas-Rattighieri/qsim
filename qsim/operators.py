@@ -3,7 +3,7 @@ from .bitops import BitOps
 
 class Operators():
 
-    def __init__(self, L: int, device = "cpu", indices: torch.Tensor = None):
+    def __init__(self, L: int, device = "cpu", indices: torch.Tensor = None, tmp: torch.Tensor = None):
         self.device = device
         self.L = L
         self.dim = 2 ** L
@@ -14,8 +14,11 @@ class Operators():
             self.indices = indices
         else:
             self.indices = self.bitops.generate_indices()
-            
-        self.tmp = torch.zeros(self.dim, dtype=self.bitops.set_dtype(), device=device)
+
+        if self.validate_indices(tmp):
+            self.tmp = tmp
+        else:     
+            self.tmp = torch.zeros(self.dim, dtype=self.bitops.set_dtype(), device=device)
 
 
     def validate_indices(self, indices: torch.Tensor) -> bool:
