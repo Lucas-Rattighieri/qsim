@@ -3,11 +3,16 @@ from .bitops import BitOps
 
 class Operators():
 
-    def __init__(self, L: int, device = "cpu", indices: torch.Tensor = None, tmp: torch.Tensor = None):
+    def __init__(self, L: int, device = "cpu", bitops: BitOps = None, indices: torch.Tensor = None, tmp: torch.Tensor = None):
         self.device = device
         self.L = L
         self.dim = 2 ** L
-        self.bitops = BitOps(L, device)
+
+        if validate_bitops(bitops):
+            self.bitops = bitops
+        else:
+            self.bitops = BitOps(L, device)
+            
         self.dtype = torch.complex128
 
         if self.validate_indices(indices):
@@ -20,7 +25,32 @@ class Operators():
         else:     
             self.tmp = torch.zeros(self.dim, dtype=self.bitops.set_dtype(), device=device)
 
+    
+    def validate_bitops(self, bitops: BitOps):
+        """
+        Checks whether the given object is a BitOps instance compatible
+        with the current context.
+    
+        The validation ensures:
+          - `bitops` is an instance of `BitOps`.
+          - The `L` attribute matches `self.L`.
+          - The `device` attribute matches `self.device`.
+    
+        Parameters
+        bitops : BitOps
+            Instance to be validated.
+    
+        Returns
+        bool
+            True if the instance is a `BitOps` object with matching attributes;
+            False otherwise.
+        """
+        if isinstance(bitops, BitOps):
+            return bitops.L == self.L and bitops.device == self.device
+        else:
+            return False
 
+    
     def validate_indices(self, indices: torch.Tensor) -> bool:
         """
         Checks whether the input tensor `indices` is valid for this system.
