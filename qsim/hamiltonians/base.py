@@ -15,12 +15,12 @@ class Hamiltonian(ABC, Operators):
     """
 
 
-    def __init__(self, L: int, device = "cpu", indices: torch.Tensor = None, tmp: torch.Tensor = None, create_tmppsis = True):
+    def __init__(self, L: int, device = "cpu", indices: torch.Tensor = None, tmp: torch.Tensor = None):
         super().__init__(L, device, indices, tmp)
 
-        if create_tmppsis:        
-            self.tmppsi1 = torch.zeros(self.dim, dtype=self.dtype, device=device)
-            self.tmppsi2 = torch.zeros(self.dim, dtype=self.dtype, device=device)
+       
+        self.tmppsi1 = torch.zeros(self.dim, dtype=self.dtype, device=device)
+        self.tmppsi2 = torch.zeros(self.dim, dtype=self.dtype, device=device)
 
     
     @abstractmethod
