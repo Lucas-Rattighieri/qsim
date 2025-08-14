@@ -69,12 +69,12 @@ class Hy(Hamiltonian):
             self.Ry(self.tmppsi1, 2 * time, qubit, out=self.tmppsi2)
             self.tmppsi2, self.tmppsi1 = self.tmppsi1, self.tmppsi2
 
+        if out is None:
+            out = self.tmppsi1.clone()
+        else:
+            out.copy_(self.tmppsi1)        
+
         if self.L & 1:
             self.tmppsi2, self.tmppsi1 = self.tmppsi1, self.tmppsi2
-
-        if out is None:
-            out = self.tmppsi2.clone()
-        else:
-            out.copy_(self.tmppsi2)
 
         return out
