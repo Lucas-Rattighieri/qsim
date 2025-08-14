@@ -1,6 +1,6 @@
 import torch
 from ..operators import Operators
-
+from abc import ABC, abstractmethod
 
 class Hamiltonian(ABC, Operators):
     """
