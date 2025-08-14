@@ -8,7 +8,7 @@ class Operators():
         self.L = L
         self.dim = 2 ** L
 
-        if validate_bitops(bitops):
+        if self.validate_bitops(bitops):
             self.bitops = bitops
         else:
             self.bitops = BitOps(L, device)
