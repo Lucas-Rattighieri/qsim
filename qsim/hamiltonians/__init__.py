@@ -1,4 +1,4 @@
 from .base import Hamiltonian
-from .hx import Hx
-from .hy import Hy
-from .hz import Hz
+from .Hx import Hx
+from .Hy import Hy
+from .Hz import Hz
