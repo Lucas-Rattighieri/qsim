@@ -1,4 +1,7 @@
 import torch
+from ..operators import Operators
+from ..bitops import BitOps
+from abc import ABC, abstractmethod
 from .base import Hamiltonian
 
 
