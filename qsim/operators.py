@@ -300,7 +300,7 @@ class Operators():
         return out
 
 
-    def Rz(self, psi: torch.Tensor, angle, qubit: it, out: torch.Tensor = None) -> torch.Tensor:
+    def Rz(self, psi: torch.Tensor, angle, qubit: int, out: torch.Tensor = None) -> torch.Tensor:
         """
         Applies the single-qubit rotation Rz gate by the specified angle to the given qubit
         of the quantum state vector `psi`.
