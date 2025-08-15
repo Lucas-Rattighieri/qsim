@@ -1,9 +1,7 @@
 import torch
-from ..operators import Operators
-from ..bitops import BitOps
 from abc import ABC, abstractmethod
 
-class Hamiltonian(ABC, Operators):
+class Hamiltonian(ABC):
     """
     Abstract base class for quantum Hamiltonians.
 
@@ -16,9 +14,10 @@ class Hamiltonian(ABC, Operators):
     """
 
 
-    def __init__(self, L: int, device = "cpu", bitops: BitOps = None, indices: torch.Tensor = None, tmp: torch.Tensor = None):
-        super().__init__(L, device, bitops, indices, tmp)
-
+    def __init__(self, L: int, device = "cpu"):
+        self.L = L
+        self.dim = 2 ** L
+        self.device = device
        
         self.tmppsi1 = torch.zeros(self.dim, dtype=self.dtype, device=device)
         self.tmppsi2 = torch.zeros(self.dim, dtype=self.dtype, device=device)
