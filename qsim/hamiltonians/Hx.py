@@ -1,7 +1,5 @@
 import torch
 from ..operators import Operators
-from ..bitops import BitOps
-from abc import ABC, abstractmethod
 from .base import Hamiltonian
 
 
@@ -19,7 +17,7 @@ class Hx(Hamiltonian):
     """
 
 
-    def __init__(self, L: int, device="cpu", bitops: BitOps = None, indices: torch.Tensor = None, tmp: torch.Tensor = None):
+    def __init__(self, L: int, device="cpu", operators: Operators = None):
         """
         Initializes the Hx Hamiltonian for a system of L qubits.
 
@@ -27,7 +25,21 @@ class Hx(Hamiltonian):
             L (int): Number of qubits.
             device (str, optional): Device for tensor operations (default 'cpu').
         """
-        super().__init__(L, device, bitops, indices, tmp)
+        super().__init__(L, device)
+
+        if self.validate_operators(operators):
+            self.ops = operators
+        else:
+            self.ops = Operators(L, device)
+        
+
+    def validate_operators(self, operators):
+        if isinstance(operators):
+            return (self.L == operators.L 
+                and self.device == operators.device
+            )
+        else:
+            return False
 
 
     def hamiltonian(self, psi, out=None):
@@ -47,7 +59,7 @@ class Hx(Hamiltonian):
             out.zero_()
 
         for qubit in range(self.L):
-            self.X(psi, qubit, out=self.tmppsi1)
+            self.ops.X(psi, qubit, out=self.tmppsi1)
             out.add_(self.tmppsi1)
 
         return out
@@ -69,7 +81,7 @@ class Hx(Hamiltonian):
         self.tmppsi1.copy_(psi)
 
         for qubit in range(self.L):
-            self.Rx(self.tmppsi1, 2 * time, qubit, out=self.tmppsi2)
+            self.ops.Rx(self.tmppsi1, 2 * time, qubit, out=self.tmppsi2)
             self.tmppsi2, self.tmppsi1 = self.tmppsi1, self.tmppsi2
 
         if out is None:
