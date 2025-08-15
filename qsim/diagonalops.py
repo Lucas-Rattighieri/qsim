@@ -46,7 +46,7 @@ class DiagonalOps:
         Generates a chain of number operators on the specified positions.
     """
 
-    def __init__(self, L: int, dtype=torch.complex128, device='cpu', tmpdiag = None):
+    def __init__(self, L: int, dtype=torch.complex128, device='cpu', tmpdiag = None, tmp = None):
 
         self.device = device
         self.L = L
@@ -58,11 +58,38 @@ class DiagonalOps:
         else:
             self.tmpdiag = torch.zeros(self.dim, dtype=self.dtype, device=device)
 
-        self.ones = torch.ones(self.dim, dtype=self.dtype, device=device)
+        if validate_tmp(self, tmp: torch.Tensor):
+            self.ones = tmp
+            self.ones.ones_()
+        else:
+            self.ones = torch.ones(self.dim, dtype = torch.int32 if L < 32 else torch.int64, device = device)
 
         self.diag_z = torch.tensor([1.0, -1.0], dtype=self.dtype, device=self.device)
         self.diag_number = torch.tensor([0.0, 1.0], dtype=self.dtype, device=self.device)
 
+
+    def validate_tmp(self, tmp: torch.Tensor) -> bool:
+        """
+        Checks whether the input tensor `tmp` is valid for this system.
+
+        A valid index tensor must:
+        - Be on the correct device;
+        - Have the correct dtype;
+        - Have length equal to 2 ** L.
+
+        Parameters:
+        - indices (torch.Tensor): The tensor to be validated.
+
+        Returns:
+        - bool: True if the tensor is valid, False otherwise.
+        """
+        if isinstance(tmp, torch.Tensor):
+            return (tmp.device == torch.device(self.device)
+                and ((tmp.dtype == tmp.int32 and L < 32) or (tmp.dtype == tmp.int64))
+                and tmp.numel() == self.dim
+            )
+        else:
+            return False
 
     def validate_vector(self, tmpdiag) -> bool:
         """
