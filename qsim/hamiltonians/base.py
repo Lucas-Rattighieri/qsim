@@ -18,6 +18,7 @@ class Hamiltonian(ABC):
         self.L = L
         self.dim = 2 ** L
         self.device = device
+        self.dtype = torch.complex128
        
         self.tmppsi1 = torch.zeros(self.dim, dtype=self.dtype, device=device)
         self.tmppsi2 = torch.zeros(self.dim, dtype=self.dtype, device=device)
