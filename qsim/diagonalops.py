@@ -58,7 +58,7 @@ class DiagonalOps:
         else:
             self.tmpdiag = torch.zeros(self.dim, dtype=self.dtype, device=device)
 
-        if validate_tmp(self, tmp: torch.Tensor):
+        if validate_tmp(tmp):
             self.ones = tmp
             self.ones.ones_()
         else:
