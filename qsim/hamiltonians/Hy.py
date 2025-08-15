@@ -18,7 +18,7 @@ class Hy(Hamiltonian):
     """
 
 
-    def __init__(self, L: int, device="cpu", bitops: BitOps = None, indices: torch.Tensor = None, tmp: torch.Tensor = None):
+    def __init__(self, L: int, device="cpu", operators: Operators = None):
         """
         Initializes the Hy Hamiltonian for a system of L qubits.
 
