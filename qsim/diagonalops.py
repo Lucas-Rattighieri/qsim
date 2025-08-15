@@ -60,7 +60,7 @@ class DiagonalOps:
 
         if self.validate_tmp(tmp):
             self.ones = tmp
-            self.ones.ones_()
+            self.ones.fill_(1)
         else:
             self.ones = torch.ones(self.dim, dtype = torch.int32 if L < 32 else torch.int64, device = device)
 
@@ -135,7 +135,7 @@ class DiagonalOps:
         if out is None:
             out = torch.zeros(self.dim, dtype=self.dtype, device=self.device)
         else:
-            out.zeros_()
+            out.zero_()
 
         if coef == 0:
             return out
