@@ -100,7 +100,7 @@ class Htsp(Hamiltonian):
         if out is None:
             out = torch.empty_like(psi)
 
-        torch.mul_(psi, self.diag_hamiltonian, out = out)
+        torch.mul(psi, self.diag_hamiltonian, out = out)
 
         return out
 
@@ -114,4 +114,5 @@ class Htsp(Hamiltonian):
         out.mul_(psi)
 
         return out
+
 
