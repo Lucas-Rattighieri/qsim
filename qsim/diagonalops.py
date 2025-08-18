@@ -166,7 +166,7 @@ class DiagonalOps:
 
         if j < self.L:
             ident = self.ones[:2 ** (self.L - j)]
-            torch.kron(resultado, ident, out=nout[:size * (2 ** (self.L - j))])
+            torch.kron(resultado[:size], ident, out=nout[:size * (2 ** (self.L - j))])
             nout, resultado = resultado, nout
 
         if out is not resultado:
