@@ -1,6 +1,6 @@
 import torch
-from .base import Hamiltonian
-from ..diagonalops import DiagonalOps
+from ..base import Hamiltonian
+from ...diagonalops import DiagonalOps
 
 
 
@@ -114,3 +114,4 @@ class Htsp(Hamiltonian):
         out.mul_(psi)
 
         return out
+
