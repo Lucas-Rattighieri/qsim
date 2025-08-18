@@ -35,11 +35,14 @@ class States():
         Returns:
         - bool: True if the tensor is valid, False otherwise.
         """
-        return (
-            indices.device == torch.device(self.device)
-            and indices.dtype == self.bitops.set_dtype()
-            and indices.numel() == self.dim
-        )
+        if isinstance(indices, torch.Tensor):
+            return (
+                indices.device == torch.device(self.device)
+                and indices.dtype == self.bitops.set_dtype()
+                and indices.numel() == self.dim
+            )
+        else:
+            return False
 
 
     def zero_vector(self, out = None):
