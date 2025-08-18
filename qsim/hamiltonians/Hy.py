@@ -33,7 +33,7 @@ class Hy(Hamiltonian):
         
 
     def validate_operators(self, operators):
-        if isinstance(operators):
+        if isinstance(operators, Operators):
             return (self.L == operators.L 
                 and self.device == operators.device
             )
