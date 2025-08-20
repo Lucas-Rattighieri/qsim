@@ -1,113 +1,19 @@
 import torch
 
 class DiagonalOps:
-    """
-    Class for construction of diagonal operators in quantum systems
-    composed of L qubits, using Kronecker products with predefined vectors.
 
-    This implementation allows fast generation of operators such as Z chains or
-    number operators, as well as arbitrary diagonal operators in the computational basis.
-
-    Parameters
-    ----------
-    L : int
-        Number of qubits in the system.
-    dtype : torch.dtype, optional
-        Data type of the tensor elements (default: torch.complex128).
-    device : str or torch.device, optional
-        Device where the tensors will be allocated (default: 'cpu').
-    tmpdiag : torch.Tensor, optional
-        Reusable temporary vector for storing intermediate results.
-        Must have size `2**L`, type `dtype`, and be located on the same `device` as the class.
-
-    Attributes
-    ----------
-    dim : int
-        Dimension of the Hilbert space (2**L).
-    tmpdiag : torch.Tensor
-        Temporary vector used in internal computations.
-    ones : torch.Tensor
-        Vector filled with ones, used as the identity in Kronecker products.
-    diag_z : torch.Tensor
-        Diagonal representation of the Pauli-Z operator for a single qubit.
-    diag_number : torch.Tensor
-        Diagonal representation of the number operator (|1><1|) for a single qubit.
-
-    Methods
-    -------
-    validate_vector(tmpdiag) -> bool
-        Checks if the provided tensor is compatible with the current configuration.
-    operator(op, pos, coef=1, out=None) -> torch.Tensor
-        Constructs a diagonal operator as a Kronecker product of `op` on the
-        specified positions, multiplied by a coefficient `coef`.
-    z_chain(pos, coef=1, out=None) -> torch.Tensor
-        Generates a chain of Pauli-Z operators on the specified positions.
-    number_chain(pos, coef=1, out=None) -> torch.Tensor
-        Generates a chain of number operators on the specified positions.
-    """
-
-    def __init__(self, L: int, dtype=torch.complex128, device='cpu', tmpdiag = None, tmp = None):
+    def __init__(self, L: int, device='cpu'):
 
         self.device = device
         self.L = L
         self.dim = 2 ** L
-        self.dtype = dtype
+        self.dtype = torch.complex128
 
-        if self.validate_vector(tmpdiag):
-            self.tmpdiag = tmpdiag
-        else:
-            self.tmpdiag = torch.zeros(self.dim, dtype=self.dtype, device=device)
-
-        if self.validate_tmp(tmp):
-            self.ones = tmp
-            self.ones.fill_(1)
-        else:
-            self.ones = torch.ones(self.dim, dtype = torch.int32 if L < 32 else torch.int64, device = device)
+        self.manager = BufferManager.get_manager(self.dim, self.device, self.dtype)
 
         self.diag_z = torch.tensor([1.0, -1.0], dtype=self.dtype, device=self.device)
         self.diag_number = torch.tensor([0.0, 1.0], dtype=self.dtype, device=self.device)
 
-
-    def validate_tmp(self, tmp: torch.Tensor) -> bool:
-        """
-        Checks whether the input tensor `tmp` is valid for this system.
-
-        A valid index tensor must:
-        - Be on the correct device;
-        - Have the correct dtype;
-        - Have length equal to 2 ** L.
-
-        Parameters:
-        - indices (torch.Tensor): The tensor to be validated.
-
-        Returns:
-        - bool: True if the tensor is valid, False otherwise.
-        """
-        if isinstance(tmp, torch.Tensor):
-            return (tmp.device == torch.device(self.device)
-                and ((tmp.dtype == tmp.int32 and L < 32) or (tmp.dtype == tmp.int64))
-                and tmp.numel() == self.dim
-            )
-        else:
-            return False
-
-    def validate_vector(self, tmpdiag) -> bool:
-        """
-        Validate whether a given vector matches the expected device, data type, and dimension.
-
-        Args:
-            tmpdiag (torch.Tensor): The vector to be validated.
-
-        Returns:
-            bool: True if the vector is valid, False otherwise.
-        """
-        if tmpdiag is None:
-            return False
-        return (
-            tmpdiag.device == torch.device(self.device)
-            and tmpdiag.dtype == self.dtype
-            and tmpdiag.numel() == self.dim
-        )
 
 
     def operator(self, op: torch.Tensor, pos: list[int], coef: complex = 1, out = None):
@@ -142,7 +48,11 @@ class DiagonalOps:
 
         pos = [self.L - k - 1 for k in pos]
         pos = sorted(pos)
-        resultado = self.tmpdiag
+
+        resultado = self.manager.get()
+        ones = self.manager.get()
+        ones.fill_(1)
+
         resultado[0] = coef
         nout = out
 
@@ -151,7 +61,7 @@ class DiagonalOps:
 
         for i in pos:
             if i > j:
-                ident = self.ones[:2 ** (i-j)]
+                ident = ones[:2 ** (i-j)]
 
                 torch.kron(resultado[:size], ident, out=nout[:size * 2 ** (i-j)])
                 nout, resultado = resultado, nout
@@ -165,13 +75,15 @@ class DiagonalOps:
 
 
         if j < self.L:
-            ident = self.ones[:2 ** (self.L - j)]
+            ident = ones[:2 ** (self.L - j)]
             torch.kron(resultado[:size], ident, out=nout[:size * (2 ** (self.L - j))])
             nout, resultado = resultado, nout
 
         if out is not resultado:
             out.copy_(resultado)
 
+        self.manager.release(resultado)
+        self.manager.release(ones)
         return out
 
 
