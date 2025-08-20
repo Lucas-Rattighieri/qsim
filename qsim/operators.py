@@ -1,79 +1,23 @@
 import torch
 from .bitops import BitOps
+from .buffermanager import BufferManager
 
 class Operators():
 
-    def __init__(self, L: int, device = "cpu", bitops: BitOps = None, indices: torch.Tensor = None, tmp: torch.Tensor = None):
+    def __init__(self, L: int, device = "cpu"):
         self.device = device
         self.L = L
         self.dim = 2 ** L
-
-        if self.validate_bitops(bitops):
-            self.bitops = bitops
-        else:
-            self.bitops = BitOps(L, device)
-            
         self.dtype = torch.complex128
 
-        if self.validate_indices(indices):
-            self.indices = indices
-        else:
-            self.indices = self.bitops.generate_indices()
+        self.bitops = BitOps(L, device)
+            
+        self.indices = BufferManager.get_index(self.dim, self.device)
 
-        if self.validate_indices(tmp):
-            self.tmp = tmp
-        else:     
-            self.tmp = torch.zeros(self.dim, dtype=self.bitops.set_dtype(), device=device)
+        self.int_manager = self.bitops.manager
+        self.manager = BufferManager.get_manager(self.dim, device, self.dtype)
 
-    
-    def validate_bitops(self, bitops: BitOps):
-        """
-        Checks whether the given object is a BitOps instance compatible
-        with the current context.
-    
-        The validation ensures:
-          - `bitops` is an instance of `BitOps`.
-          - The `L` attribute matches `self.L`.
-          - The `device` attribute matches `self.device`.
-    
-        Parameters
-        bitops : BitOps
-            Instance to be validated.
-    
-        Returns
-        bool
-            True if the instance is a `BitOps` object with matching attributes;
-            False otherwise.
-        """
-        if isinstance(bitops, BitOps):
-            return bitops.L == self.L and bitops.device == self.device
-        else:
-            return False
-
-    
-    def validate_indices(self, indices: torch.Tensor) -> bool:
-        """
-        Checks whether the input tensor `indices` is valid for this system.
-
-        A valid index tensor must:
-        - Be on the correct device;
-        - Have the correct dtype (matching BitOps configuration);
-        - Have length equal to 2 ** L.
-
-        Parameters:
-        - indices (torch.Tensor): The tensor to be validated.
-
-        Returns:
-        - bool: True if the tensor is valid, False otherwise.
-        """
-        if indices is None:
-            return False
-        return (
-            indices.device == torch.device(self.device)
-            and indices.dtype == self.bitops.set_dtype()
-            and indices.numel() == self.dim
-        )
-
+   
     
     def X(self, psi: torch.Tensor, qubits, out: torch.Tensor = None) -> torch.Tensor:
         """
@@ -88,13 +32,18 @@ class Operators():
         Returns:
             torch.Tensor: State vector after applying the X gate(s).
         """
+
         if out is None:
             out = torch.empty_like(psi)
+        
+        tmp = self.int_manager.get()
+        
 
-        self.bitops.flip_bits(self.indices, qubits, out=self.tmp)
+        self.bitops.flip_bits(self.indices, qubits, out=tmp)
 
-        torch.index_select(psi, 0, self.tmp, out=out)
+        torch.index_select(psi, 0, tmp, out=out)
 
+        self.int_manager.release(tmp)
         return out
 
 
@@ -114,12 +63,15 @@ class Operators():
         if out is None:
             out = torch.empty_like(psi)
 
-        self.bitops.xor_bits(self.indices, qubits, out=self.tmp)
+        tmp = self.int_manager.get()
 
-        torch.add(1, self.tmp, alpha= -2, out=self.tmp)
+        self.bitops.xor_bits(self.indices, qubits, out=tmp)
 
-        torch.mul(self.tmp, psi, out=out)
+        torch.add(1, tmp, alpha= -2, out=tmp)
 
+        torch.mul(tmp, psi, out=out)
+
+        self.int_manager.release(tmp)
         return out
 
 
@@ -138,17 +90,20 @@ class Operators():
         """
         if out is None:
             out = torch.empty_like(psi)
+        
+        tmp = self.int_manager.get()
 
-        self.bitops.flip_bits(self.indices, qubits, out=self.tmp)
-        torch.index_select(psi, 0, self.tmp, out=out)
+        self.bitops.flip_bits(self.indices, qubits, out=tmp)
+        torch.index_select(psi, 0, tmp, out=out)
 
-        self.bitops.xor_bits(self.indices, qubits, out=self.tmp)
-        self.tmp.add_(1, alpha = -2)
+        self.bitops.xor_bits(self.indices, qubits, out=tmp)
+        tmp.add_(1, alpha = -2)
 
-        out.mul_(self.tmp)
+        out.mul_(tmp)
 
         out.mul_(-1j)
 
+        self.int_manager.release(tmp)
         return out
 
 
@@ -174,18 +129,20 @@ class Operators():
 
         if out is None:
             out = torch.empty_like(psi)
+        
+        tmp = self.int_manager.get()
 
         self.X(psi, qubit, out=out)
 
+        self.bitops.get_bit(self.indices, qubit, out=tmp)
+        torch.add(1, tmp, alpha= -2, out=tmp)
 
-        self.bitops.get_bit(self.indices, qubit, out=self.tmp)
-        torch.add(1, self.tmp, alpha= -2, out=self.tmp)
-
-        out.mul_(self.tmp)
+        out.mul_(tmp)
         out.add_(psi)
-        out.mul_(self.tmp)
+        out.mul_(tmp)
         out.mul_(0.7071067811865475)
 
+        self.int_manager.release(tmp)
         return out
 
 
@@ -214,11 +171,14 @@ class Operators():
 
         if out is None:
             out = torch.empty_like(psi)
+        
+        tmp = self.int_manager.get()
 
-        self.bitops.get_bit(self.indices, qubit, out=self.tmp)
-        torch.add(1, self.tmp, alpha= (phase * 1j - 1), out=out)
+        self.bitops.get_bit(self.indices, qubit, out=tmp)
+        torch.add(1, tmp, alpha= (phase * 1j - 1), out=out)
         out.mul_(psi)
 
+        self.int_manager.release(tmp)
         return out
 
 
@@ -245,6 +205,8 @@ class Operators():
 
         if out is None:
             out = torch.empty_like(psi)
+        
+        tmp = self.int_manager.get()
 
         if not isinstance(angle, torch.Tensor):
             theta = torch.tensor(angle, dtype=self.dtype, device=self.device)
@@ -258,6 +220,7 @@ class Operators():
         out.mul_(-istheta)
         out.add_(psi, alpha=ctheta)
 
+        self.int_manager.release(tmp)
         return out
 
 
@@ -284,6 +247,8 @@ class Operators():
 
         if out is None:
             out = torch.empty_like(psi)
+        
+        tmp = self.int_manager.get()
 
         if not isinstance(angle, torch.Tensor):
             theta = torch.tensor(angle, dtype=self.dtype, device=self.device)
@@ -297,6 +262,7 @@ class Operators():
         out.mul_(-istheta)
         out.add_(psi, alpha=ctheta)
 
+        self.int_manager.release(tmp)
         return out
 
 
@@ -323,6 +289,8 @@ class Operators():
 
         if out is None:
             out = torch.empty_like(psi)
+        
+        tmp = self.int_manager.get()
 
         if not isinstance(angle, torch.Tensor):
             theta = torch.tensor(angle, dtype=self.dtype, device=self.device)
@@ -336,6 +304,7 @@ class Operators():
         out.mul_(-istheta)
         out.add_(psi, alpha=ctheta)
 
+        self.int_manager.release(tmp)
         return out
 
 
@@ -356,13 +325,16 @@ class Operators():
         """
         if out is None:
             out = torch.empty_like(psi)
+        
+        tmp = self.int_manager.get()
 
-        self.bitops.get_bits(self.indices, control, out=self.tmp)
-        self.tmp.bitwise_left_shift_(target)
-        self.tmp.bitwise_xor_(self.indices)
+        self.bitops.get_bits(self.indices, control, out=tmp)
+        tmp.bitwise_left_shift_(target)
+        tmp.bitwise_xor_(self.indices)
 
-        torch.index_select(psi, 0, self.tmp, out=out)
+        torch.index_select(psi, 0, tmp, out=out)
 
+        self.int_manager.release(tmp)
         return out
 
 
@@ -383,21 +355,25 @@ class Operators():
         """
         if out is None:
             out = torch.empty_like(psi)
+        
+        tmp = self.int_manager.get()
 
         if target < control:
             control, target = target, control
 
 
-        self.tmp.copy_(self.indices)
+        tmp.copy_(self.indices)
 
-        self.tmp.bitwise_right_shift_(target - control)
-        self.tmp.bitwise_and_(self.indices)
-        self.tmp.bitwise_right_shift_(control)
-        self.tmp.bitwise_and_(1)
+        tmp.bitwise_right_shift_(target - control)
+        tmp.bitwise_and_(self.indices)
+        tmp.bitwise_right_shift_(control)
+        tmp.bitwise_and_(1)
 
-        torch.add(1, self.tmp, alpha= -2, out=self.tmp)
+        torch.add(1, tmp, alpha= -2, out=tmp)
 
-        torch.mul(psi, self.tmp, out=out)
+        torch.mul(psi, tmp, out=out)
+
+        self.int_manager.release(tmp)
         return out
 
 
@@ -417,10 +393,13 @@ class Operators():
         """
         if out is None:
             out = torch.empty_like(psi)
+        
+        tmp = self.int_manager.get()
 
-        self.bitops.permute_bits(self.indices, qubit_i, qubit_j, out=self.tmp)
-        torch.index_select(psi, 0, self.tmp, out=out)
+        self.bitops.permute_bits(self.indices, qubit_i, qubit_j, out=tmp)
+        torch.index_select(psi, 0, tmp, out=out)
 
+        self.int_manager.release(tmp)
         return out
 
 
@@ -441,11 +420,14 @@ class Operators():
         """
         if out is None:
             out = torch.empty_like(psi)
+        
+        tmp = self.int_manager.get()
 
-        self.bitops.and_bits(self.indices, controls, out=self.tmp)
-        self.tmp.bitwise_left_shift_(target)
-        self.tmp.bitwise_xor_(self.indices)
+        self.bitops.and_bits(self.indices, controls, out=tmp)
+        tmp.bitwise_left_shift_(target)
+        tmp.bitwise_xor_(self.indices)
 
-        torch.index_select(psi, 0, self.tmp, out=out)
+        torch.index_select(psi, 0, tmp, out=out)
       
+        self.int_manager.release(tmp)
         return out
