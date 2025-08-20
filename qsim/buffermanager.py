@@ -11,8 +11,8 @@ class BufferManager:
     will reuse the same BufferManager instance.
     """
     
-    # Global registry: (dim, device, dtype) -> BufferManager
     _registry = {}
+    _index_registry = {}
 
     def __init__(self, dim, device="cpu", dtype=torch.complex64):
         """
@@ -50,6 +50,27 @@ class BufferManager:
         return cls._registry[key]
 
 
+    @classmethod
+    def get_index(cls, dim, device="cpu"):
+        """
+        Returns an immutable index tensor [0, 1, ..., dim-1] from the registry.
+        If it does not exist, creates it.
+
+        Args:
+            dim (int): length of the index tensor.
+            device (str or torch.device): device for tensor allocation.
+            dtype (torch.dtype): data type of the tensor.
+
+        Returns:
+            torch.Tensor: immutable index tensor.
+        """
+        dtype = torch.int32 if dim < 2 ** 32 else torch.int64
+        key = (dim, str(device))
+        if key not in cls._index_registry:
+            cls._index_registry[key] = torch.arange(dim, device=device, dtype=dtype)
+        return cls._index_registry[key]
+
+    
     def get(self):
         """
         Returns an available buffer. If none is free, creates a new one.
