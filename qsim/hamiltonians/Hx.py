@@ -1,7 +1,7 @@
 import torch
 from ..operators import Operators
 from .base import Hamiltonian
-
+from ..buffermanager import BufferManager
 
 class Hx(Hamiltonian):
     """
@@ -17,7 +17,7 @@ class Hx(Hamiltonian):
     """
 
 
-    def __init__(self, L: int, device="cpu", operators: Operators = None):
+    def __init__(self, L: int, device="cpu"):
         """
         Initializes the Hx Hamiltonian for a system of L qubits.
 
@@ -27,20 +27,8 @@ class Hx(Hamiltonian):
         """
         super().__init__(L, device)
 
-        if self.validate_operators(operators):
-            self.ops = operators
-        else:
-            self.ops = Operators(L, device)
+        self.ops = Operators(L, device)
         
-
-    def validate_operators(self, operators):
-        if isinstance(operators, Operators):
-            return (self.L == operators.L 
-                and self.device == operators.device
-            )
-        else:
-            return False
-
 
     def hamiltonian(self, psi, out=None):
         """
@@ -57,11 +45,14 @@ class Hx(Hamiltonian):
             out = torch.zeros_like(psi)
         else:
             out.zero_()
+        
+        tmppsi = self.manager.get()
 
         for qubit in range(self.L):
-            self.ops.X(psi, qubit, out=self.tmppsi1)
-            out.add_(self.tmppsi1)
+            self.ops.X(psi, qubit, out=tmppsi)
+            out.add_(tmppsi)
 
+        self.manager.release(tmppsi)
         return out
 
 
@@ -78,18 +69,21 @@ class Hx(Hamiltonian):
         Returns:
             torch.Tensor: Quantum state after evolution.
         """
-        self.tmppsi1.copy_(psi)
+
+        tmppsi1 = self.manager.get()
+        tmppsi2 = self.manager.get()
+
+        tmppsi1.copy_(psi)
 
         for qubit in range(self.L):
-            self.ops.Rx(self.tmppsi1, 2 * time, qubit, out=self.tmppsi2)
-            self.tmppsi2, self.tmppsi1 = self.tmppsi1, self.tmppsi2
+            self.ops.Rx(tmppsi1, 2 * time, qubit, out=tmppsi2)
+            tmppsi2, tmppsi1 = tmppsi1, tmppsi2
 
         if out is None:
-            out = self.tmppsi1.clone()
+            out = tmppsi1.clone()
         else:
-            out.copy_(self.tmppsi1)        
+            out.copy_(tmppsi1)        
 
-        if self.L & 1:
-            self.tmppsi2, self.tmppsi1 = self.tmppsi1, self.tmppsi2
-
+        self.manager.release(tmppsi1)
+        self.manager.release(tmppsi2)
         return out
