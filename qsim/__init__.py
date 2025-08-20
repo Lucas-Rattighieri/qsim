@@ -3,3 +3,4 @@ from .operators import Operators
 from .states import States
 from .hamiltonians import Hx, Hy, Hz, Hamiltonian, Htsp
 from .diagonalops import DiagonalOps
+from .buffermanager import BufferManager
