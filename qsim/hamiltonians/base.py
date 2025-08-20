@@ -1,5 +1,6 @@
 import torch
 from abc import ABC, abstractmethod
+from ..buffermanager import BufferManager
 
 class Hamiltonian(ABC):
     """
@@ -20,8 +21,7 @@ class Hamiltonian(ABC):
         self.device = device
         self.dtype = torch.complex128
        
-        self.tmppsi1 = torch.zeros(self.dim, dtype=self.dtype, device=device)
-        self.tmppsi2 = torch.zeros(self.dim, dtype=self.dtype, device=device)
+        self.manager = BufferManager.get_manager(self.dim, self.device, self.dtype)
 
     
     @abstractmethod
@@ -53,4 +53,3 @@ class Hamiltonian(ABC):
         """
 
         pass
-
