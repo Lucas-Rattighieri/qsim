@@ -1,12 +1,13 @@
 import torch
+from .buffermanager import BufferManager
 
 class BitOps:
 
     def __init__(self, L: int, device = "cpu"):
         self.device = device
         self.L = L
-        self.maxelements = 2 ** L
-        self.tmp = torch.zeros(2 ** L, dtype=self.set_dtype(), device=device)
+        self.dim = 2 ** L
+        self.manager = BufferManager.get_manager(self.dim, device, self.set_dtype())
 
 
     def set_dtype(self):
@@ -32,7 +33,7 @@ class BitOps:
 
         Parameters:
             None. Uses the instance attributes:
-                - self.maxelements (int): Total number of elements, 2 ** L.
+                - self.dim (int): Total number of elements, 2 ** L.
                 - self.device (str): Device on which the tensor is allocated.
 
         Returns:
@@ -40,7 +41,7 @@ class BitOps:
             from 0 to 2 ** L - 1 with the appropriate dtype.
         """
 
-        indices = torch.arange(self.maxelements, dtype=self.set_dtype(), device=self.device)
+        indices = torch.arange(self.dim, dtype=self.set_dtype(), device=self.device)
         return indices
 
 
@@ -174,14 +175,18 @@ class BitOps:
         else:
             out.zero_()
 
+        tmp = self.manager.get()
+
         num_elements = len(num)
         nout = out[:num_elements]
-        ntmp = self.tmp[:num_elements]
+        ntmp = tmp[:num_elements]
 
         for i in range(self.L):
             torch.bitwise_right_shift(num, i, out=ntmp)
             ntmp.bitwise_and_(1)
             nout.add_(ntmp)
+
+        self.manager.release(tmp)
         return out
 
 
@@ -212,9 +217,10 @@ class BitOps:
         if bit_j < bit_i:
             bit_i, bit_j = bit_j, bit_i
 
+        tmp = self.manager.get()
         num_elements = len(num)
         nout = out[:num_elements]
-        ntmp = self.tmp[:num_elements]
+        ntmp = tmp[:num_elements]
 
         torch.bitwise_right_shift(num, bit_j - bit_i, out=ntmp)
         ntmp.bitwise_xor_(num)
@@ -226,6 +232,7 @@ class BitOps:
         nout.bitwise_or_(ntmp) # nout = (mask << i) | (mask << j)
         nout.bitwise_xor_(num)
 
+        self.manager.release(tmp)
         return out
 
 
@@ -254,10 +261,10 @@ class BitOps:
         if out is None:
             out = torch.empty_like(num)
 
-
+        tmp = self.manager.get()
         num_elements = len(num)
         nout = out[:num_elements]
-        ntmp = self.tmp[:num_elements]
+        ntmp = tmp[:num_elements]
 
         torch.bitwise_left_shift(num, positions, out=ntmp)
 
@@ -266,6 +273,7 @@ class BitOps:
         ntmp.bitwise_and_(mask)
         nout.bitwise_or_(ntmp)
 
+        self.manager.release(tmp)
         return out
 
 
@@ -338,9 +346,10 @@ class BitOps:
         else:
             out.zero_()
 
+        tmp = self.manager.get()
         num_elements = len(num)
         nout = out[:num_elements]
-        ntmp = self.tmp[:num_elements]
+        ntmp = tmp[:num_elements]
 
         for i in range(self.L):
             torch.bitwise_right_shift(num, i, out=ntmp)
@@ -348,6 +357,7 @@ class BitOps:
             ntmp.bitwise_left_shift_(self.L-1-i)
             nout.bitwise_or_(ntmp)
 
+        self.manager.release(tmp)
         return out
 
 
@@ -382,9 +392,10 @@ class BitOps:
         elif isinstance(bits, int):
             bits = [bits]
 
+        tmp = self.manager.get()
         num_elements = len(num)
         nout = out[:num_elements]
-        ntmp = self.tmp[:num_elements]
+        ntmp = tmp[:num_elements]
 
         for bit in bits:
             torch.bitwise_right_shift(num, bit, out=ntmp)
@@ -392,6 +403,7 @@ class BitOps:
             nout.bitwise_xor_(ntmp)
         nout.bitwise_and_(1)
 
+        self.manager.release(tmp)
         return out
 
 
@@ -418,9 +430,10 @@ class BitOps:
         elif isinstance(bits, int):
             bits = [bits]
 
+        tmp = self.manager.get()
         num_elements = len(num)
         nout = out[:num_elements]
-        ntmp = self.tmp[:num_elements]
+        ntmp = tmp[:num_elements]
 
         for bit in bits:
             torch.bitwise_right_shift(num, bit, out=ntmp)
@@ -428,6 +441,7 @@ class BitOps:
             nout.bitwise_and_(ntmp)
         nout.bitwise_and_(1)
 
+        self.manager.release(tmp)
         return out
 
 
@@ -454,14 +468,17 @@ class BitOps:
         elif isinstance(bits, int):
             bits = [bits]
 
+        tmp = self.manager.get()
         num_elements = len(num)
         nout = out[:num_elements]
-        ntmp = self.tmp[:num_elements]
+        ntmp = tmp[:num_elements]
 
         for bit in bits:
             torch.bitwise_right_shift(num, bit, out=ntmp)
 
             nout.bitwise_or_(ntmp)
         nout.bitwise_and_(1)
+
+        self.manager.release(tmp)
 
         return out
