@@ -27,24 +27,6 @@ class BitOps:
             return torch.int64
 
 
-    def generate_indices(self):
-        """
-        Generates all possible integer indices for bitstrings of length L.
-
-        Parameters:
-            None. Uses the instance attributes:
-                - self.dim (int): Total number of elements, 2 ** L.
-                - self.device (str): Device on which the tensor is allocated.
-
-        Returns:
-            torch.Tensor: A 1D tensor of shape (2 ** L,) containing all integers
-            from 0 to 2 ** L - 1 with the appropriate dtype.
-        """
-
-        indices = torch.arange(self.dim, dtype=self.set_dtype(), device=self.device)
-        return indices
-
-
     def set_bits(self, num, bits, out=None):
         """
         Sets one or more bits to 1 in an integer or each element of a tensor.
