@@ -1,16 +1,19 @@
 import torch
 from ..base import Hamiltonian
 from ...diagonalops import DiagonalOps
-
+from ...buffermanager import BufferManager
 
 
 class Htsp(Hamiltonian):
 
-    def __init__(self, num_cities: int,
-                 adjacency_matrix, penalty_weigth:float, cost_weigth: float,
+    def __init__(self, 
+                 num_cities: int,
+                 adjacency_matrix, 
+                 penalty_weigth:float, 
+                 cost_weigth: float,
                  fix_city: bool = False,
-                 device="cpu",
-                 tmp: torch.Tensor = None):
+                 device="cpu"):
+                     
         self.num_cities = num_cities
         self.fix_city = fix_city
         self.adjacency_matrix = adjacency_matrix
@@ -21,8 +24,8 @@ class Htsp(Hamiltonian):
 
         super().__init__(L, device)
 
-        self.diag = DiagonalOps(L, self.dtype, self.device, self.tmppsi1, tmp)
-        self.diag_hamiltonian = self.tmppsi2
+        self.diag = DiagonalOps(L, self.device)
+        self.diag_hamiltonian = torch.empty(2**L, device=self.device, dtype=self.dtype)
         self.create_diagonal_hamiltonian()
 
 
@@ -40,8 +43,8 @@ class Htsp(Hamiltonian):
 
         self.diag_hamiltonian.zero_()
 
-        term = torch.empty_like(self.diag_hamiltonian)
-        out_chain = torch.empty_like(self.diag_hamiltonian)
+        term = self.manager.get()
+        out_chain = self.manager.get()
 
         start = 1 if self.fix_city else 0
 
@@ -49,8 +52,7 @@ class Htsp(Hamiltonian):
         for city in range(start, self.num_cities):
             term.fill_(1)
             for position in range(start, self.num_cities):
-                index = self._index(city, position)
-                # print(f"city = {city}, position = {position}, index = {index}")
+                index = self._index(city, position)  
                 self.diag.number_chain([index], out = out_chain)
                 term.sub_(out_chain)
             term.pow_(2)
@@ -93,6 +95,8 @@ class Htsp(Hamiltonian):
                             self.diag.number_chain([index_i, index_j], weigth, out = out_chain)
                             self.diag_hamiltonian.add_(out_chain)
 
+        self.manager.release(term)
+        self.manager.release(out_chain)
         return self.diag_hamiltonian
 
 
@@ -114,5 +118,6 @@ class Htsp(Hamiltonian):
         out.mul_(psi)
 
         return out
+
 
 
