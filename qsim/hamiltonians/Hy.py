@@ -1,15 +1,14 @@
 import torch
 from ..operators import Operators
-from abc import ABC, abstractmethod
 from .base import Hamiltonian
-
+from ..buffermanager import BufferManager
 
 class Hy(Hamiltonian):
     """
     Quantum Hamiltonian representing a sum of Pauli-Y operators on each qubit.
 
     Implements the Hamiltonian and its time evolution for a transverse field
-    in the Y direction.
+    in the Y direction, commonly used in quantum spin models.
 
     Methods:
         hamiltonian(psi, out=None): Applies the sum of Pauli-Y operators to state `psi`.
@@ -18,27 +17,18 @@ class Hy(Hamiltonian):
     """
 
 
-    def __init__(self, L: int, device="cpu", operators: Operators = None):
+    def __init__(self, L: int, device="cpu"):
         """
-        Initializes the Hy Hamiltonian for a system of L qubits.
+        Initializes the Hx Hamiltonian for a system of L qubits.
 
         Args:
             L (int): Number of qubits.
             device (str, optional): Device for tensor operations (default 'cpu').
         """
-        if self.validate_operators(operators):
-            self.ops = operators
-        else:
-            self.ops = Operators(L, device)
-        
+        super().__init__(L, device)
 
-    def validate_operators(self, operators):
-        if isinstance(operators, Operators):
-            return (self.L == operators.L 
-                and self.device == operators.device
-            )
-        else:
-            return False
+        self.ops = Operators(L, device)
+        
 
 
     def hamiltonian(self, psi, out=None):
@@ -56,11 +46,14 @@ class Hy(Hamiltonian):
             out = torch.zeros_like(psi)
         else:
             out.zero_()
+        
+        tmppsi = self.manager.get()
 
         for qubit in range(self.L):
-            self.ops.Y(psi, qubit, out=self.tmppsi1)
-            out.add_(self.tmppsi1)
+            self.ops.Y(psi, qubit, out=tmppsi)
+            out.add_(tmppsi)
 
+        self.manager.release(tmppsi)
         return out
 
 
@@ -77,18 +70,21 @@ class Hy(Hamiltonian):
         Returns:
             torch.Tensor: Quantum state after evolution.
         """
-        self.tmppsi1.copy_(psi)
+
+        tmppsi1 = self.manager.get()
+        tmppsi2 = self.manager.get()
+
+        tmppsi1.copy_(psi)
 
         for qubit in range(self.L):
-            self.ops.Ry(self.tmppsi1, 2 * time, qubit, out=self.tmppsi2)
-            self.tmppsi2, self.tmppsi1 = self.tmppsi1, self.tmppsi2
+            self.ops.Ry(tmppsi1, 2 * time, qubit, out=tmppsi2)
+            tmppsi2, tmppsi1 = tmppsi1, tmppsi2
 
         if out is None:
-            out = self.tmppsi1.clone()
+            out = tmppsi1.clone()
         else:
-            out.copy_(self.tmppsi1)        
+            out.copy_(tmppsi1)        
 
-        if self.L & 1:
-            self.tmppsi2, self.tmppsi1 = self.tmppsi1, self.tmppsi2
-
+        self.manager.release(tmppsi1)
+        self.manager.release(tmppsi2)
         return out
