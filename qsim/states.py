@@ -1,6 +1,6 @@
 import torch
 from .bitops import BitOps
-
+from .buffermanager import BufferManager
 
 class States():
 
@@ -11,39 +11,10 @@ class States():
         self.bitops = BitOps(L, device)
         self.dtype = torch.complex128
 
-        if self.validate_indices(indices):
-            self.indices = indices
-        else:
-            self.indices = self.bitops.generate_indices()
+        self.indices = BufferManager.get_index(self.dim, self.device)
+
+        self.int_manager = BufferManager.get_manager(self.dim, device, torch.int32 if L < 32 else torch.int64)
         
-        self.tmp1 = torch.zeros(self.dim, dtype=self.bitops.set_dtype(), device=device)
-        self.tmp2 = torch.zeros(self.dim, dtype=self.bitops.set_dtype(), device=device)
-
-
-    def validate_indices(self, indices) -> bool:
-        """
-        Checks whether the input tensor `indices` is valid for this system.
-
-        A valid index tensor must:
-        - Be on the correct device;
-        - Have the correct dtype (matching BitOps configuration);
-        - Have length equal to 2 ** L.
-
-        Parameters:
-        - indices (torch.Tensor): The tensor to be validated.
-
-        Returns:
-        - bool: True if the tensor is valid, False otherwise.
-        """
-        if isinstance(indices, torch.Tensor):
-            return (
-                indices.device == torch.device(self.device)
-                and indices.dtype == self.bitops.set_dtype()
-                and indices.numel() == self.dim
-            )
-        else:
-            return False
-
 
     def zero_vector(self, out = None):
         """
@@ -81,7 +52,7 @@ class States():
         if out is None:
             out = torch.ones(self.dim, dtype=self.dtype, device=self.device)
         else:
-            out.ones_()
+            out.fill_(1)
     
         out.mul_(2 ** (-self.L / 2))
         return out
@@ -126,16 +97,22 @@ class States():
         if out is None:
             out = torch.ones(self.dim, dtype=self.dtype, device=self.device)
         else:
-            out.ones_()
+            out.fill_(1)
+
+        tmp1 = self.int_manager.get()
+        tmp2 = self.int_manager.get()
+
 
         qubits_ones = [qubit for qubit in range(self.L) if state & (1 << qubit)]
 
-        self.bitops.xor_bits(self.indices, qubits_ones, out=self.tmp1)
+        self.bitops.xor_bits(self.indices, qubits_ones, out=tmp1)
 
-        torch.add(1, self.tmp1, alpha= -2, out=self.tmp2)
-        out.mul_(self.tmp2)
+        torch.add(1, tmp1, alpha= -2, out=tmp2)
+        out.mul_(tmp2)
         out.mul_(2**(-self.L / 2))
 
+        self.int_manager.release(tmp1)
+        self.int_manager.release(tmp2)
         return out
 
 
@@ -154,27 +131,32 @@ class States():
 
         if out is None:
             out = torch.empty(self.dim, dtype=self.dtype, device=self.device)
+        
+        tmp1 = self.int_manager.get()
+        tmp2 = self.int_manager.get()
 
-        self.bitops.count_bits(self.indices, out=self.tmp1)
+        self.bitops.count_bits(self.indices, out=tmp1)
 
-        torch.bitwise_and(self.tmp1, 1, out=self.tmp2)
+        torch.bitwise_and(tmp1, 1, out=tmp2)
         torch.mul(self.tm2, (1j - 1), out=out)
         out.add_(1)
 
-        self.tmp1.bitwise_right_shift_(1)
-        self.tmp1.bitwise_and_(1)
-        torch.add(1, self.tmp1, alpha= -2, out=self.tmp2)
-        out.mul_(self.tmp2)
+        tmp1.bitwise_right_shift_(1)
+        tmp1.bitwise_and_(1)
+        torch.add(1, tmp1, alpha= -2, out=tmp2)
+        out.mul_(tmp2)
 
-        torch.bitwise_and(self.indices, state, out=self.tmp2)
+        torch.bitwise_and(self.indices, state, out=tmp2)
         qubits_ones = [qubit for qubit in range(self.L) if state & (1 << qubit)]
 
-        self.bitops.xor_bits(self.indices, qubits_ones, out=self.tmp1)
+        self.bitops.xor_bits(self.indices, qubits_ones, out=tmp1)
 
-        torch.add(1, self.tmp1, alpha= -2, out=self.tmp2)
-        out.mul_(self.tmp2)
+        torch.add(1, tmp1, alpha= -2, out=tmp2)
+        out.mul_(tmp2)
         out.mul_(2**(-self.L / 2))
 
+        self.int_manager.release(tmp1)
+        self.int_manager.release(tmp2)
         return out
 
 
@@ -194,18 +176,21 @@ class States():
         if out is None:
             out = torch.ones(self.dim, dtype=self.dtype, device=self.device)
         else:
-            out.ones_()
+            out.fill_(1)
 
         if hamming_weight == 0:
             self.z_state(0, out)
             return out
+        
+        tmp = self.int_manager.get()
 
-        self.bitops.count_bits(self.indices, out=self.tmp1)
-        # torch.eq(self.tmp1, hamming_weight, out=self.tmp2)
-        # out.copy_(self.tmp2)
-        torch.eq(self.tmp1, hamming_weight, out=out)
+        self.bitops.count_bits(self.indices, out=tmp)
+
+        torch.eq(tmp, hamming_weight, out=out)
 
         norm = torch.linalg.norm(out)
         out.div_(norm)
+
+        self.int_manager.release(tmp)
         return out
       
