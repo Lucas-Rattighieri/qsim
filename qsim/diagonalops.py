@@ -1,4 +1,5 @@
 import torch
+from .buffermanager import BufferManager
 
 class DiagonalOps:
 
