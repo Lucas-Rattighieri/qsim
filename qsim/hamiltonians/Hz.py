@@ -1,45 +1,34 @@
 import torch
 from ..operators import Operators
-from ..bitops import BitOps
-from abc import ABC, abstractmethod
 from .base import Hamiltonian
-
-
+from ..buffermanager import BufferManager
 
 class Hz(Hamiltonian):
     """
     Quantum Hamiltonian representing a sum of Pauli-Z operators on each qubit.
 
-    This class implements both the application of the Hamiltonian to a quantum state
-    and the corresponding unitary evolution, simulating a transverse field in the Z direction.
+    Implements the Hamiltonian and its time evolution for a transverse field
+    in the Z direction, commonly used in quantum spin models.
 
     Methods:
-        hamiltonian(psi, out=None): Applies the sum of Pauli-Z operators to the input state.
+        hamiltonian(psi, out=None): Applies the sum of Pauli-Z operators to state `psi`.
         evolution(psi, time, out=None): Evolves the state `psi` under the Hamiltonian
                                        for a given time.
     """
 
-    def __init__(self, L: int, device="cpu", operators: Operators = None):
+
+    def __init__(self, L: int, device="cpu"):
         """
-        Initializes the Hz Hamiltonian for a system with L qubits.
+        Initializes the Hz Hamiltonian for a system of L qubits.
 
         Args:
             L (int): Number of qubits.
-            device (str, optional): Device used for tensor computations (default is "cpu").
+            device (str, optional): Device for tensor operations (default 'cpu').
         """
-        if self.validate_operators(operators):
-            self.ops = operators
-        else:
-            self.ops = Operators(L, device)
-        
+        super().__init__(L, device)
 
-    def validate_operators(self, operators):
-        if isinstance(operators, Operators):
-            return (self.L == operators.L 
-                and self.device == operators.device
-            )
-        else:
-            return False
+        self.ops = Operators(L, device)
+        
 
 
     def hamiltonian(self, psi, out=None):
@@ -57,38 +46,45 @@ class Hz(Hamiltonian):
             out = torch.zeros_like(psi)
         else:
             out.zero_()
+        
+        tmppsi = self.manager.get()
 
         for qubit in range(self.L):
-            self.ops.Z(psi, qubit, out=self.tmppsi1)
-            out.add_(self.tmppsi1)
+            self.ops.Z(psi, qubit, out=tmppsi)
+            out.add_(tmppsi)
 
+        self.manager.release(tmppsi)
         return out
 
 
     def evolution(self, psi, time, out=None):
         """
-        Evolves the quantum state `psi` under the Hz Hamiltonian for a duration `time`.
+        Evolves the quantum state `psi` under the Hz Hamiltonian for a time `time`.
 
         Args:
-            psi (torch.Tensor): Input quantum state vector.
-            time (float): Time evolution parameter.
-            out (torch.Tensor, optional): Tensor to store the evolved state. If None, a new tensor is returned.
+            psi (torch.Tensor): Initial quantum state vector.
+            time (float): Evolution time parameter.
+            out (torch.Tensor, optional): Tensor to store the evolved state.
+                                          If None, a new tensor is created.
 
         Returns:
-            torch.Tensor: Evolved quantum state.
+            torch.Tensor: Quantum state after evolution.
         """
-        self.tmppsi1.copy_(psi)
+
+        tmppsi1 = self.manager.get()
+        tmppsi2 = self.manager.get()
+
+        tmppsi1.copy_(psi)
 
         for qubit in range(self.L):
-            self.ops.Rz(self.tmppsi1, 2 * time, qubit, out=self.tmppsi2)
-            self.tmppsi2, self.tmppsi1 = self.tmppsi1, self.tmppsi2
+            self.ops.Rz(tmppsi1, 2 * time, qubit, out=tmppsi2)
+            tmppsi2, tmppsi1 = tmppsi1, tmppsi2
 
         if out is None:
-            out = self.tmppsi1.clone()
+            out = tmppsi1.clone()
         else:
-            out.copy_(self.tmppsi1)        
+            out.copy_(tmppsi1)        
 
-        if self.L & 1:
-            self.tmppsi2, self.tmppsi1 = self.tmppsi1, self.tmppsi2
-
+        self.manager.release(tmppsi1)
+        self.manager.release(tmppsi2)
         return out
