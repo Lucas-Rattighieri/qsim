@@ -38,9 +38,8 @@ class Operators():
         
         tmp = self.int_manager.get()
         
-
         self.bitops.flip_bits(self.indices, qubits, out=tmp)
-
+        
         torch.index_select(psi, 0, tmp, out=out)
 
         self.int_manager.release(tmp)
@@ -130,9 +129,9 @@ class Operators():
         if out is None:
             out = torch.empty_like(psi)
         
-        tmp = self.int_manager.get()
-
         self.X(psi, qubit, out=out)
+
+        tmp = self.int_manager.get()
 
         self.bitops.get_bit(self.indices, qubit, out=tmp)
         torch.add(1, tmp, alpha= -2, out=tmp)
@@ -206,7 +205,6 @@ class Operators():
         if out is None:
             out = torch.empty_like(psi)
         
-        tmp = self.int_manager.get()
 
         if not isinstance(angle, torch.Tensor):
             theta = torch.tensor(angle, dtype=self.dtype, device=self.device)
@@ -220,7 +218,6 @@ class Operators():
         out.mul_(-istheta)
         out.add_(psi, alpha=ctheta)
 
-        self.int_manager.release(tmp)
         return out
 
 
@@ -248,7 +245,6 @@ class Operators():
         if out is None:
             out = torch.empty_like(psi)
         
-        tmp = self.int_manager.get()
 
         if not isinstance(angle, torch.Tensor):
             theta = torch.tensor(angle, dtype=self.dtype, device=self.device)
@@ -262,7 +258,6 @@ class Operators():
         out.mul_(-istheta)
         out.add_(psi, alpha=ctheta)
 
-        self.int_manager.release(tmp)
         return out
 
 
@@ -290,8 +285,7 @@ class Operators():
         if out is None:
             out = torch.empty_like(psi)
         
-        tmp = self.int_manager.get()
-
+ 
         if not isinstance(angle, torch.Tensor):
             theta = torch.tensor(angle, dtype=self.dtype, device=self.device)
         else:
@@ -304,7 +298,6 @@ class Operators():
         out.mul_(-istheta)
         out.add_(psi, alpha=ctheta)
 
-        self.int_manager.release(tmp)
         return out
 
 
