@@ -49,6 +49,26 @@ class BufferManager:
             cls._registry[key] = cls(dim, device, dtype)
         return cls._registry[key]
 
+    @classmethod
+    def delete_manager(cls, dim, device="cpu", dtype=torch.complex64):
+        """
+        Delete a BufferManager from the registry for the given key.
+
+        Parameters
+        ----------
+        dim : int
+            Dimension of the buffers handled by the manager.
+        device : str or torch.device
+            Device where the buffers are allocated.
+        dtype : torch.dtype
+            Data type of the buffers.
+        """
+        key = (dim, str(device), dtype)
+        if key in cls._registry:
+            del cls._registry[key]
+        else:
+            raise KeyError(f"No BufferManager found for key {key}")
+
 
     @classmethod
     def get_index(cls, dim, device="cpu"):
