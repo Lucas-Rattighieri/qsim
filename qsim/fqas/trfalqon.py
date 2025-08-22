@@ -1,5 +1,5 @@
 import torch
-from ..hamiltonian import Hamiltonian
+from ..hamiltonians import Hamiltonian
 from ..buffermanager import BufferManager
 
 def trfalqon(
@@ -137,4 +137,5 @@ def trfalqon(
             return final_state, energies, betas, fidelities
         return final_state, energies, betas
     return final_state
+
 
