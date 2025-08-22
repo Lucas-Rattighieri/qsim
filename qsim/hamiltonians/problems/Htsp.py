@@ -45,6 +45,7 @@ class Htsp(Hamiltonian):
 
         term = self.manager.get()
         out_chain = self.manager.get()
+        print(id(term), id(out_chain))
 
         start = 1 if self.fix_city else 0
 
@@ -118,6 +119,7 @@ class Htsp(Hamiltonian):
         out.mul_(psi)
 
         return out
+
 
 
 
