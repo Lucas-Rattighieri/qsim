@@ -1,5 +1,5 @@
 import torch
-from ..hamiltonian import Hamiltonian
+from ..hamiltonians import Hamiltonian
 from ..buffermanager import BufferManager
 
 def falqon(
@@ -120,4 +120,5 @@ def falqon(
         if track_fidelities is not None:
             return final_state, energies, betas, fidelities
         return final_state, energies, betas
+
     return final_state
