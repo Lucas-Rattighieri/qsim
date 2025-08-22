@@ -53,7 +53,7 @@ class DiagonalOps:
         resultado = self.manager.get()
         ones = self.manager.get()
         ones.fill_(1)
-        print('diagops', id(resultado), id(ones), id(out))
+        # print('diagops', id(resultado), id(ones), id(out))
 
         resultado[0] = coef
         nout = out
