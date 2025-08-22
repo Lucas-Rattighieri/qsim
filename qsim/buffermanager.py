@@ -65,6 +65,7 @@ class BufferManager:
         """
         key = (dim, str(device), dtype)
         if key in cls._registry:
+            cls._registry[key].clear()
             del cls._registry[key]
         else:
             raise KeyError(f"No BufferManager found for key {key}")
@@ -123,3 +124,46 @@ class BufferManager:
                 self.in_use[i] = False
                 return
         raise ValueError("Buffer does not belong to this manager")
+
+
+    def acquire_all(self):
+        """
+        Marks all existing buffers as in use.
+
+        Returns:
+            list[torch.Tensor]: list of all buffers now marked as in use.
+        """
+
+        for i in range(len(self.in_use)):
+            self.in_use[i] = True
+
+        return self.buffers
+
+    def release_all(self):
+        """
+        Marks all buffers as available for reuse.
+
+        Returns:
+            list[torch.Tensor]: list of all buffers now marked as free.
+        """
+        for i in range(len(self.in_use)):
+            self.in_use[i] = False
+
+        return self.buffers
+
+    
+    def clear(self):
+        """
+        Deallocates all buffers managed by this instance.
+
+        This removes all stored tensors and resets the usage flags.
+        After calling this method, the BufferManager will behave as if
+        no buffers had been allocated.
+
+        Returns:
+            None
+        """
+        self.buffers.clear()
+        self.in_use.clear()
+        if "cuda" in str(self.device):
+            torch.cuda.empty_cache()
