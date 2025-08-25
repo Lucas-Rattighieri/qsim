@@ -4,7 +4,7 @@ from .buffermanager import BufferManager
 
 class States():
 
-    def __init__(self, L: int, device = "cpu", indices = None):
+    def __init__(self, L: int, device = "cpu"):
         self.device = device
         self.L = L
         self.dim = 2 ** L
