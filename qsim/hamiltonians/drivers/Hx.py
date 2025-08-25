@@ -1,17 +1,18 @@
 import torch
-from ..operators import Operators
-from .base import Hamiltonian
-from ..buffermanager import BufferManager
+from ...operators import Operators
+from ..base import Hamiltonian
+from ...buffermanager import BufferManager
 
-class Hz(Hamiltonian):
+
+class Hx(Hamiltonian):
     """
-    Quantum Hamiltonian representing a sum of Pauli-Z operators on each qubit.
+    Quantum Hamiltonian representing a sum of Pauli-X operators on each qubit.
 
     Implements the Hamiltonian and its time evolution for a transverse field
-    in the Z direction, commonly used in quantum spin models.
+    in the X direction, commonly used in quantum spin models.
 
     Methods:
-        hamiltonian(psi, out=None): Applies the sum of Pauli-Z operators to state `psi`.
+        hamiltonian(psi, out=None): Applies the sum of Pauli-X operators to state `psi`.
         evolution(psi, time, out=None): Evolves the state `psi` under the Hamiltonian
                                        for a given time.
     """
@@ -19,7 +20,7 @@ class Hz(Hamiltonian):
 
     def __init__(self, L: int, device="cpu"):
         """
-        Initializes the Hz Hamiltonian for a system of L qubits.
+        Initializes the Hx Hamiltonian for a system of L qubits.
 
         Args:
             L (int): Number of qubits.
@@ -30,10 +31,9 @@ class Hz(Hamiltonian):
         self.ops = Operators(L, device)
         
 
-
     def hamiltonian(self, psi, out=None):
         """
-        Applies the Hamiltonian (sum of Pauli-Z) to the quantum state vector `psi`.
+        Applies the Hamiltonian (sum of Pauli-X) to the quantum state vector `psi`.
 
         Args:
             psi (torch.Tensor): Input quantum state vector.
@@ -50,7 +50,7 @@ class Hz(Hamiltonian):
         tmppsi = self.manager.get()
 
         for qubit in range(self.L):
-            self.ops.Z(psi, qubit, out=tmppsi)
+            self.ops.X(psi, qubit, out=tmppsi)
             out.add_(tmppsi)
 
         self.manager.release(tmppsi)
@@ -59,7 +59,7 @@ class Hz(Hamiltonian):
 
     def evolution(self, psi, time, out=None):
         """
-        Evolves the quantum state `psi` under the Hz Hamiltonian for a time `time`.
+        Evolves the quantum state `psi` under the Hx Hamiltonian for a time `time`.
 
         Args:
             psi (torch.Tensor): Initial quantum state vector.
@@ -77,7 +77,7 @@ class Hz(Hamiltonian):
         tmppsi1.copy_(psi)
 
         for qubit in range(self.L):
-            self.ops.Rz(tmppsi1, 2 * time, qubit, out=tmppsi2)
+            self.ops.Rx(tmppsi1, 2 * time, qubit, out=tmppsi2)
             tmppsi2, tmppsi1 = tmppsi1, tmppsi2
 
         if out is None:

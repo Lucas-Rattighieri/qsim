@@ -1,17 +1,18 @@
 import torch
-from ..operators import Operators
-from .base import Hamiltonian
-from ..buffermanager import BufferManager
+from ...operators import Operators
+from ..base import Hamiltonian
+from ...buffermanager import BufferManager
 
-class Hx(Hamiltonian):
+
+class Hy(Hamiltonian):
     """
-    Quantum Hamiltonian representing a sum of Pauli-X operators on each qubit.
+    Quantum Hamiltonian representing a sum of Pauli-Y operators on each qubit.
 
     Implements the Hamiltonian and its time evolution for a transverse field
-    in the X direction, commonly used in quantum spin models.
+    in the Y direction, commonly used in quantum spin models.
 
     Methods:
-        hamiltonian(psi, out=None): Applies the sum of Pauli-X operators to state `psi`.
+        hamiltonian(psi, out=None): Applies the sum of Pauli-Y operators to state `psi`.
         evolution(psi, time, out=None): Evolves the state `psi` under the Hamiltonian
                                        for a given time.
     """
@@ -30,9 +31,10 @@ class Hx(Hamiltonian):
         self.ops = Operators(L, device)
         
 
+
     def hamiltonian(self, psi, out=None):
         """
-        Applies the Hamiltonian (sum of Pauli-X) to the quantum state vector `psi`.
+        Applies the Hamiltonian (sum of Pauli-Y) to the quantum state vector `psi`.
 
         Args:
             psi (torch.Tensor): Input quantum state vector.
@@ -49,7 +51,7 @@ class Hx(Hamiltonian):
         tmppsi = self.manager.get()
 
         for qubit in range(self.L):
-            self.ops.X(psi, qubit, out=tmppsi)
+            self.ops.Y(psi, qubit, out=tmppsi)
             out.add_(tmppsi)
 
         self.manager.release(tmppsi)
@@ -58,7 +60,7 @@ class Hx(Hamiltonian):
 
     def evolution(self, psi, time, out=None):
         """
-        Evolves the quantum state `psi` under the Hx Hamiltonian for a time `time`.
+        Evolves the quantum state `psi` under the Hy Hamiltonian for a time `time`.
 
         Args:
             psi (torch.Tensor): Initial quantum state vector.
@@ -76,7 +78,7 @@ class Hx(Hamiltonian):
         tmppsi1.copy_(psi)
 
         for qubit in range(self.L):
-            self.ops.Rx(tmppsi1, 2 * time, qubit, out=tmppsi2)
+            self.ops.Ry(tmppsi1, 2 * time, qubit, out=tmppsi2)
             tmppsi2, tmppsi1 = tmppsi1, tmppsi2
 
         if out is None:

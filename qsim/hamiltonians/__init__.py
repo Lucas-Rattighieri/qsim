@@ -1,5 +1,3 @@
 from .base import Hamiltonian
-from .Hx import Hx
-from .Hy import Hy
-from .Hz import Hz
+from .drivers import Hx, Hy, Hz
 from .problems import Htsp
