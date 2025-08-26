@@ -49,7 +49,7 @@ class Htsp(Hamiltonian):
 
         start = 1 if self.fix_city else 0
 
-
+        print("restrição 1")
         for city in range(start, self.num_cities):
             term.fill_(1)
             for position in range(start, self.num_cities):
@@ -59,7 +59,7 @@ class Htsp(Hamiltonian):
             term.pow_(2)
             self.diag_hamiltonian.add_(term, alpha=self.penalty_weigth)
 
-
+        print("restrição 2")
         for position in range(start, self.num_cities):
             term.fill_(1)
             for city in range(start, self.num_cities):
@@ -69,7 +69,7 @@ class Htsp(Hamiltonian):
             term.pow_(2)
             self.diag_hamiltonian.add_(term, alpha=self.penalty_weigth)
 
-
+        print("custo")
         for city_i in range(self.num_cities):
             for city_j in range(self.num_cities):
                 if city_i != city_j:
@@ -161,6 +161,7 @@ class Htsp(Hamiltonian):
             cycle = [0] + cycle
     
         return cycle
+
 
 
 
