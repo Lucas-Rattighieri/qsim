@@ -134,7 +134,7 @@ def sofalqon(
         # <psi| [[Hd, Hp], Hp] |psi>
         C = - 2 * PsiHpHdHpPsi + PsiHpHpHdPsi + torch.conj(PsiHpHpHdPsi)
 
-        beta2 = - (A + dt * C) / (2 * dt * torch.abs(B))
+        beta2 = - (A + time_step * C) / (2 * time_step * torch.abs(B))
 
         beta = beta2 if torch.abs(beta1) > torch.abs(beta2) else beta1
 
@@ -155,3 +155,4 @@ def sofalqon(
         return final_state, energies, betas
 
     return final_state
+
