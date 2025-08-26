@@ -49,6 +49,7 @@ class DiagonalOps:
 
         pos = [self.L - k - 1 for k in pos]
         pos = sorted(pos)
+        print(pos)
 
         resultado = self.manager.get()
         ones = self.manager.get()
