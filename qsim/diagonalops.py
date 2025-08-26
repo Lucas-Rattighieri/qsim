@@ -47,11 +47,16 @@ class DiagonalOps:
         if coef == 0:
             return out
 
-        print(pos)
-        pos = [self.L - k - 1 for k in pos]
+        
+        for i, k in enumerate(pos):
+            if k < 0 or k >= self.L:
+                raise ValueError(f"Positions must be between 0 and {self.L}")
+            else:
+                pos[i] = self.L - k - 1
+                
         pos = sorted(pos)
-        print(pos)
-        print()
+
+
 
         resultado = self.manager.get()
         ones = self.manager.get()
