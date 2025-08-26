@@ -74,6 +74,7 @@ class Htsp(Hamiltonian):
             for city_j in range(self.num_cities):
                 if city_i != city_j:
                     for position in range(self.num_cities):
+                        print(f"city i = {city_i}, city j = {city_j}, position = {position}")
                         index_i = self._index(city_i, position)
                         index_j = self._index(city_j, (position + 1) % self.num_cities)
 
@@ -161,6 +162,7 @@ class Htsp(Hamiltonian):
             cycle = [0] + cycle
     
         return cycle
+
 
 
 
