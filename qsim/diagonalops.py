@@ -47,9 +47,11 @@ class DiagonalOps:
         if coef == 0:
             return out
 
+        print(pos)
         pos = [self.L - k - 1 for k in pos]
         pos = sorted(pos)
         print(pos)
+        print()
 
         resultado = self.manager.get()
         ones = self.manager.get()
