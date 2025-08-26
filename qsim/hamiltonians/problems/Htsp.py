@@ -20,7 +20,7 @@ class Htsp(Hamiltonian):
         self.cost_weigth = cost_weigth
         self.penalty_weigth = penalty_weigth
 
-        L = (num_cities - 1) ** 2 if self.fix_city else num_cities ** 2
+        L = (num_cities - self.fix_city) ** 2 
 
         super().__init__(L, device)
 
@@ -119,6 +119,50 @@ class Htsp(Hamiltonian):
         out.mul_(psi)
 
         return out
+
+
+    def hamiltonian_cycle(self, state):
+        """
+        Reconstructs a Hamiltonian cycle from a given integer representation.
+    
+        Parameters:
+            state (int): Encoded state representing the cycle as a bit sequence.
+    
+        Returns:
+            list[int]: A list representing the Hamiltonian cycle, where each index
+                       corresponds to the position in the cycle and the value is the city.
+                       Cities not visited are marked as -1.
+        """
+
+        n = self.num_cities - self.fix_city
+        cycle = [-1] * n
+        mask = (1 << n) - 1  # Bitmask to extract n bits
+    
+        for city in range(n):
+            position = state & mask  # Extract bits for this city's position
+    
+            # Check if position has exactly one bit set
+            if position > 0 and (position & (position - 1)) == 0:
+                num_position = 0
+                while position > 1:
+                    position >>= 1  
+                    num_position += 1
+            else:
+                num_position = -1
+    
+            # Assign city to its position in the cycle
+            if num_position != -1:
+                cycle[num_position] = city + self.fix_city
+    
+            state >>= n  # Shift to the next block of bits
+    
+        # Add fixed city at the start if needed
+        if self.fix_city:
+            cycle = [0] + cycle
+    
+        return cycle
+
+
 
 
 
