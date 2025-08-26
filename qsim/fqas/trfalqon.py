@@ -93,7 +93,7 @@ def trfalqon(
         betas = []
         fidelities = [] if track_fidelities is not None else None
 
-    df_tau = time_rescaling_derivative(dt, *args_derivative)
+    df_tau = time_rescaling_derivative(time_step, *args_derivative)
 
     # Main loop
     for layer in range(1, num_layers + 1):
@@ -112,7 +112,7 @@ def trfalqon(
         PsiHdHpPsi = torch.vdot(final_state, work_buffer2)
 
         # f'(layer * Delta t) 
-        df_tau = time_rescaling_derivative(dt * (layer+1), *args_derivative)
+        df_tau = time_rescaling_derivative(time_step * (layer+1), *args_derivative)
 
         # Beta calculation: -<psi| i[Hd, Hp] |psi> / (f'_layer)
         beta = -1j * (PsiHdHpPsi - torch.conj(PsiHdHpPsi)) / df_tau
@@ -137,5 +137,6 @@ def trfalqon(
             return final_state, energies, betas, fidelities
         return final_state, energies, betas
     return final_state
+
 
 
