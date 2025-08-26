@@ -49,7 +49,7 @@ class Htsp(Hamiltonian):
 
         start = 1 if self.fix_city else 0
 
-        print("restrição 1")
+        # print("restrição 1")
         for city in range(start, self.num_cities):
             term.fill_(1)
             for position in range(start, self.num_cities):
@@ -59,7 +59,7 @@ class Htsp(Hamiltonian):
             term.pow_(2)
             self.diag_hamiltonian.add_(term, alpha=self.penalty_weigth)
 
-        print("restrição 2")
+        # print("restrição 2")
         for position in range(start, self.num_cities):
             term.fill_(1)
             for city in range(start, self.num_cities):
@@ -69,23 +69,23 @@ class Htsp(Hamiltonian):
             term.pow_(2)
             self.diag_hamiltonian.add_(term, alpha=self.penalty_weigth)
 
-        print("custo")
+        # print("custo")
         for city_i in range(self.num_cities):
             for city_j in range(self.num_cities):
                 if city_i != city_j:
                     for position in range(self.num_cities):
-                        print(f"city i = {city_i}, city j = {city_j}, position = {position}")
+                        # print(f"city i = {city_i}, city j = {city_j}, position = {position}")
                         index_i = self._index(city_i, position)
                         index_j = self._index(city_j, (position + 1) % self.num_cities)
 
                         weigth = self.adjacency_matrix[city_i, city_j] * self.cost_weigth
                         if self.fix_city:
                             
-                            if city_i == 0 or position == 0:
+                            if city_i == 0 and position == 0:
                                 self.diag.number_chain([index_j], weigth, out = out_chain)
                                 self.diag_hamiltonian.add_(out_chain)
 
-                            elif city_j == 0 or (position + 1) % self.num_cities == 0:
+                            elif city_j == 0 and (position + 1) % self.num_cities == 0:
                                 self.diag.number_chain([index_i], weigth, out = out_chain)
                                 self.diag_hamiltonian.add_(out_chain)
 
@@ -162,6 +162,7 @@ class Htsp(Hamiltonian):
             cycle = [0] + cycle
     
         return cycle
+
 
 
 
