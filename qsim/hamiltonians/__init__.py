@@ -1,3 +1,3 @@
 from .base import Hamiltonian
 from .drivers import Hx, Hy, Hz
-from .problems import Htsp
+from .problems import Htsp, Hmaxcut
