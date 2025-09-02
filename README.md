@@ -29,7 +29,7 @@ Hamiltonians define the evolution and cost of quantum states. All inherit from t
 |             | `Hy`             | Y driver: $H_y = \sum_i Y_i$, applied to each qubit with Pauli-Y.                               |
 |             | `Hz`             | Z driver: $H_z = \sum_i Z_i$, applied to each qubit with Pauli-Z.                               |
 | Problems    | `Htsp`           | [TSP](https://doi.org/10.3389/fphy.2014.00005): encodes penalty constraints and the total route cost; allows fixing the first city.       |
-|             | `Hmaxcut`        | [MaxCut](https://doi.org/10.3389/fphy.2014.00005): $H_\text{MaxCut} = \sum_{(i,j>i)\in E} w_{i,j} (1 - Z_i Z_j)$.                         |
+|             | `Hmaxcut`        | [MaxCut](https://doi.org/10.3389/fphy.2014.00005): $H_\text{MaxCut} = -\sum_{(i,j>i)\in E} w_{i,j} (1 - Z_i Z_j)$.                         |
 
 ---
 
@@ -42,6 +42,7 @@ Feedback-based Quantum Algorithms.
 | `falqon`     | Feedback-based Algorithm for Quantum Optimization [(FALQON)](https://doi.org/10.1103/PhysRevLett.129.250502)|
 | `sofalqon`   | Second Order FALQON [(SO-FALQON)](https://doi.org/10.1103/PhysRevResearch.7.013035)|
 | `trfalqon`   | Time-Rescaled FALQON [(TR-FALQON)](https://doi.org/10.48550/arXiv.2504.01256)|
+
 
 
 
