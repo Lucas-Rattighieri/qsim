@@ -93,14 +93,16 @@ class Hmaxcut(Hamiltonian):
             index_i = self._index(vertex_i)
             for vertex_j in range(vertex_i + 1, self.L):
                 index_j = self._index(vertex_j)
-                identity_weigth += self.adjacency_matrix[vertex_i, vertex_j]
 
-                if self.fix_vertex and vertex_i == 0:
-                    self.diag.z_chain([index_j], self.adjacency_matrix[vertex_i, vertex_j], out=out_chain)
-                else:
-                    self.diag.z_chain([index_i, index_j], self.adjacency_matrix[vertex_i, vertex_j], out=out_chain)
-
-                self.diag_hamiltonian.add_(out_chain)
+                if self.andjacency_matrix[vertex_i, vertex_j] != 0:
+                    identity_weigth += self.adjacency_matrix[vertex_i, vertex_j]
+    
+                    if self.fix_vertex and vertex_i == 0:
+                        self.diag.z_chain([index_j], self.adjacency_matrix[vertex_i, vertex_j], out=out_chain)
+                    else:
+                        self.diag.z_chain([index_i, index_j], self.adjacency_matrix[vertex_i, vertex_j], out=out_chain)
+    
+                    self.diag_hamiltonian.add_(out_chain)
         
         if self.consider_identity:
             out_chain.fill_(-identity_weigth)
