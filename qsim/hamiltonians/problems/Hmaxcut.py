@@ -94,7 +94,7 @@ class Hmaxcut(Hamiltonian):
             for vertex_j in range(vertex_i + 1, self.L):
                 index_j = self._index(vertex_j)
 
-                if self.andjacency_matrix[vertex_i, vertex_j] != 0:
+                if self.adjacency_matrix[vertex_i, vertex_j] != 0:
                     identity_weigth += self.adjacency_matrix[vertex_i, vertex_j]
     
                     if self.fix_vertex and vertex_i == 0:
