@@ -146,7 +146,7 @@ def sofalqon(
         if hybrid_approach:
             beta = beta2 if torch.abs(beta1) > torch.abs(beta2) else beta1
         else:
-            beta = beta2 if torch.abs(beta2) < 10 * torch.abs(beta1) else 10 * torch.abs(beta1)
+            beta = beta2 if torch.abs(beta2) < 10 * torch.abs(beta1) else 10 * beta1
 
         if return_data:
             # optional fidelities: |<basis_states|psi>|^2
@@ -165,6 +165,7 @@ def sofalqon(
         return final_state, energies, betas
 
     return final_state
+
 
 
 
