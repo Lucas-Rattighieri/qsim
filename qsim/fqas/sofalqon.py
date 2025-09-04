@@ -10,6 +10,7 @@ def sofalqon(
     time_step: float,
     num_layers: int,
     initial_beta: float = 0.0,
+    hybrid_approach: bool = True,
     final_state: torch.Tensor = None,
     return_data: bool = False,
     track_fidelities: list = None,
@@ -32,6 +33,12 @@ def sofalqon(
         Number of evolution layers to apply.
     initial_beta : float, optional
         Initial value of the control parameter beta (default: 0.0).
+    hybrid_approach: bool, optional  
+        Defines the strategy for computing the control parameter β.  
+        - If True, uses a hybrid approach, alternating between the β 
+            from the standard FALQON (first-order) rule and the second-order β, 
+            selecting the most suitable value at each iteration.  
+        - If False, exclusively applies the second-order β in all layers.
     final_state : torch.Tensor, optional
         Preallocated tensor to store the evolving state. If None, a copy
         of the initial state is created (default: None).
@@ -136,7 +143,10 @@ def sofalqon(
 
         beta2 = - (A + time_step * C) / (2 * time_step * torch.abs(B))
 
-        beta = beta2 if torch.abs(beta1) > torch.abs(beta2) else beta1
+        if hybrid_approach:
+            beta = beta2 if torch.abs(beta1) > torch.abs(beta2) else beta1
+        else:
+            beta = beta2
 
         if return_data:
             # optional fidelities: |<basis_states|psi>|^2
@@ -155,4 +165,5 @@ def sofalqon(
         return final_state, energies, betas
 
     return final_state
+
 
