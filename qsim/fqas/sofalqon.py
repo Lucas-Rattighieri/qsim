@@ -141,6 +141,9 @@ def sofalqon(
         # <psi| [[Hd, Hp], Hp] |psi>
         C = - 2 * PsiHpHdHpPsi + PsiHpHpHdPsi + torch.conj(PsiHpHpHdPsi)
 
+        if layer < 10:
+            print(A, B, C)
+
         beta2 = - (A + time_step * C) / (2 * time_step * torch.abs(B))
 
         if hybrid_approach:
@@ -165,6 +168,7 @@ def sofalqon(
         return final_state, energies, betas
 
     return final_state
+
 
 
 
