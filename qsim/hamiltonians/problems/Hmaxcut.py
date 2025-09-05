@@ -89,9 +89,9 @@ class Hmaxcut(Hamiltonian):
         out_chain = self.manager.get()
         identity_weigth = 0
 
-        for vertex_i in range(self.L):
+        for vertex_i in range(self.num_vertices):
             index_i = self._index(vertex_i)
-            for vertex_j in range(vertex_i + 1, self.L):
+            for vertex_j in range(vertex_i + 1, self.num_vertices):
                 index_j = self._index(vertex_j)
 
                 if self.adjacency_matrix[vertex_i, vertex_j] != 0:
