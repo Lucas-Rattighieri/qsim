@@ -174,7 +174,8 @@ class Operators():
         tmp = self.int_manager.get()
 
         self.bitops.get_bit(self.indices, qubit, out=tmp)
-        torch.add(1, tmp, alpha= (phase * 1j - 1), out=out)
+        torch.mul(tmp, phase * 1j - 1, out=out)
+        out.add_(1)
         out.mul_(psi)
 
         self.int_manager.release(tmp)
