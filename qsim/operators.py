@@ -96,7 +96,7 @@ class Operators():
         torch.index_select(psi, 0, tmp, out=out)
 
         self.bitops.xor_bits(self.indices, qubits, out=tmp)
-        tmp.add_(1, alpha = -2)
+        torch.add(1, tmp, alpha= -2, out=tmp)
 
         out.mul_(tmp)
 
