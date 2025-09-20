@@ -18,7 +18,7 @@ class Hx(Hamiltonian):
     """
 
 
-    def __init__(self, L: int, device="cpu"):
+    def __init__(self, L: int, qubits = None, device="cpu"):
         """
         Initializes the Hx Hamiltonian for a system of L qubits.
 
@@ -29,6 +29,11 @@ class Hx(Hamiltonian):
         super().__init__(L, device)
 
         self.ops = Operators(L, device)
+
+        if qubit is None:
+            self.qubits = range(L)
+        else:
+            self.qubits = qubits
         
 
     def hamiltonian(self, psi, out=None):
@@ -49,7 +54,7 @@ class Hx(Hamiltonian):
         
         tmppsi = self.manager.get()
 
-        for qubit in range(self.L):
+        for qubit in self.qubits:
             self.ops.X(psi, qubit, out=tmppsi)
             out.add_(tmppsi)
 
@@ -76,7 +81,7 @@ class Hx(Hamiltonian):
 
         tmppsi1.copy_(psi)
 
-        for qubit in range(self.L):
+        for qubit in self.qubits:
             self.ops.Rx(tmppsi1, 2 * time, qubit, out=tmppsi2)
             tmppsi2, tmppsi1 = tmppsi1, tmppsi2
 
