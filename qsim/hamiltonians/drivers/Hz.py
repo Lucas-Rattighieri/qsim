@@ -18,7 +18,7 @@ class Hz(Hamiltonian):
     """
 
 
-    def __init__(self, L: int, device="cpu"):
+    def __init__(self, L: int, qubits = None, device="cpu"):
         """
         Initializes the Hz Hamiltonian for a system of L qubits.
 
@@ -29,6 +29,11 @@ class Hz(Hamiltonian):
         super().__init__(L, device)
 
         self.ops = Operators(L, device)
+
+        if qubit is None:
+            self.qubits = range(L)
+        else:
+            self.qubits = qubits
         
 
 
@@ -50,7 +55,7 @@ class Hz(Hamiltonian):
         
         tmppsi = self.manager.get()
 
-        for qubit in range(self.L):
+        for qubit in self.qubits:
             self.ops.Z(psi, qubit, out=tmppsi)
             out.add_(tmppsi)
 
@@ -77,7 +82,7 @@ class Hz(Hamiltonian):
 
         tmppsi1.copy_(psi)
 
-        for qubit in range(self.L):
+        for qubit in self.qubits:
             self.ops.Rz(tmppsi1, 2 * time, qubit, out=tmppsi2)
             tmppsi2, tmppsi1 = tmppsi1, tmppsi2
 
