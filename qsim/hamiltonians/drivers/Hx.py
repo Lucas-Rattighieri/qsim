@@ -30,7 +30,7 @@ class Hx(Hamiltonian):
 
         self.ops = Operators(L, device)
 
-        if qubit is None:
+        if qubits is None:
             self.qubits = range(L)
         else:
             self.qubits = qubits
