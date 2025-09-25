@@ -282,7 +282,7 @@ class Hmst(Hamiltonian):
             torch.Tensor: Symmetric adjacency matrix where 
             edges with value 1 are active in the state.
         """
-        values = self.values_variables(state)
+        values = self.variable_values(state)
         adj = torch.zeros((self.num_vertices, self.num_vertices))
 
         for (t, u, v), value in values.items():
