@@ -40,10 +40,11 @@ Feedback-based Quantum Algorithms.
 
 | Function     | Short description                |
 | ------------ | -------------------------------- |
-| `falqon`     | Feedback-based Algorithm for Quantum Optimization [(FALQON)](https://doi.org/10.1103/PhysRevLett.129.250502)|
-| `mdfalqon`     |FALQON for multiple driver Hamiltonians [(MD-FALQON)](https://doi.org/10.1103/PhysRevA.106.062414)|
+| `falqon`     | Feedback-based Algorithm for Quantum Optimization [(FALQON)](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.129.250502)|
+| `mdfalqon`     |FALQON for multiple driver Hamiltonians [(MD-FALQON)](https://journals.aps.org/pra/abstract/10.1103/PhysRevA.106.062414)|
 | `sofalqon`   | Second Order FALQON [(SO-FALQON)](https://doi.org/10.1103/PhysRevResearch.7.013035)|
 | `trfalqon`   | Time-Rescaled FALQON [(TR-FALQON)](https://doi.org/10.48550/arXiv.2504.01256)|
+
 
 
 
