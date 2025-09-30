@@ -34,15 +34,23 @@ class Operators():
         """
 
         if out is None:
-            out = torch.empty_like(psi)
+            nout = torch.empty_like(psi)
+        elif out is psi:
+            nout = self.manager.get()
+        else:
+            nout = out
         
         tmp = self.int_manager.get()
         
         self.bitops.flip_bits(self.indices, qubits, out=tmp)
         
-        torch.index_select(psi, 0, tmp, out=out)
+        torch.index_select(psi, 0, tmp, out=nout)
 
         self.int_manager.release(tmp)
+        
+        if out is psi:
+            psi.copy_(nout)
+            self.manager.release(nout)
         return out
 
 
@@ -88,19 +96,25 @@ class Operators():
             torch.Tensor: State vector after applying the Y gate(s).
         """
         if out is None:
-            out = torch.empty_like(psi)
+            nout = torch.empty_like(psi)
+        elif out is psi:
+            nout = self.manager.get()
+        else:
+            nout = out
         
         tmp = self.int_manager.get()
 
         self.bitops.flip_bits(self.indices, qubits, out=tmp)
-        torch.index_select(psi, 0, tmp, out=out)
+        torch.index_select(psi, 0, tmp, out=nout)
 
         self.bitops.xor_bits(self.indices, qubits, out=tmp)
         torch.add(1, tmp, alpha= -2, out=tmp)
 
-        out.mul_(tmp)
+        nout.mul_(tmp)
 
-        out.mul_(-1j)
+        torch.mul(nout, -1j, out=out)
+        if out is psi:
+            self.manager.release(nout)
 
         self.int_manager.release(tmp)
         return out
