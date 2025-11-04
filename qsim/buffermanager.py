@@ -32,22 +32,23 @@ class BufferManager:
 
     @classmethod
     def get_manager(cls, dim, device, dtype):
-        """
-        Returns a BufferManager instance from the global registry. Creates a new
-        one if no manager exists for the given properties.
-
-        Args:
-            dim (int): dimension of each tensor.
-            device (str or torch.device, optional): device where tensors will be allocated.
-            dtype (torch.dtype, optional): data type of the tensors.
-
-        Returns:
-            BufferManager: an instance corresponding to the requested properties.
-        """
+    
         key = (dim, str(device), dtype)
-        if key not in cls._registry:
-            cls._registry[key] = cls(dim, device, dtype)
-        return cls._registry[key]
+        if key in cls._registry:
+            return cls._registry[key]
+    
+        same_device_dtype = [
+            (d, dev, dt) for (d, dev, dt) in cls._registry.keys()
+            if dev == str(device) and dt == dtype and d >= dim
+        ]
+        if same_device_dtype:
+            d_closest = min(same_device_dtype, key=lambda k: k[0])
+            return cls._registry[d_closest]
+    
+        next_pow2 = 1 << (dim - 1).bit_length()
+        new_key = (next_pow2, str(device), dtype)
+        cls._registry[new_key] = cls(next_pow2, device, dtype)
+        return cls._registry[new_key]
 
     @classmethod
     def delete_manager(cls, dim, device="cpu", dtype=torch.complex64):
