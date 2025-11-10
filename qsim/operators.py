@@ -10,7 +10,7 @@ class Operators():
         self.dim = 2 ** L
         self.dtype = torch.complex128
 
-        self.bitops = BitOps(L, device)
+        self.bitops = BitOps(L, device=device)
             
         self.indices = BufferManager.get_index(self.dim, self.device)
 
