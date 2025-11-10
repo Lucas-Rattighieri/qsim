@@ -3,10 +3,10 @@ from .buffermanager import BufferManager
 
 class BitOps:
 
-    def __init__(self, L: int, device = "cpu"):
+    def __init__(self, L: int, max_elements: int = None, device = "cpu"):
         self.device = device
         self.L = L
-        self.dim = 2 ** L
+        self.dim = 2 ** L if max_elements is None else max_elements
         self.manager = BufferManager.get_manager(self.dim, device, self.set_dtype())
 
 
