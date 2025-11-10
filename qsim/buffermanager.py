@@ -36,18 +36,21 @@ class BufferManager:
         key = (dim, str(device), dtype)
         if key in cls._registry:
             return cls._registry[key]
+
+
+        dim = 1 << (dim - 1).bit_length()
     
         same_device_dtype = [
             (d, dev, dt) for (d, dev, dt) in cls._registry.keys()
-            if dev == str(device) and dt == dtype and d >= dim
+            if dev == str(device) and dt == dtype and d == dim
         ]
         if same_device_dtype:
             d_closest = min(same_device_dtype, key=lambda k: k[0])
             return cls._registry[d_closest]
     
-        next_pow2 = 1 << (dim - 1).bit_length()
-        new_key = (next_pow2, str(device), dtype)
-        cls._registry[new_key] = cls(next_pow2, device, dtype)
+        next_pow2 = dim
+        new_key = (dim, str(device), dtype)
+        cls._registry[new_key] = cls(dim, device, dtype)
         return cls._registry[new_key]
 
     @classmethod
