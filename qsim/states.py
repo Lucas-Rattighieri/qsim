@@ -8,7 +8,7 @@ class States():
         self.device = device
         self.L = L
         self.dim = 2 ** L
-        self.bitops = BitOps(L, device)
+        self.bitops = BitOps(L, device=device)
         self.dtype = torch.complex128
 
         self.indices = BufferManager.get_index(self.dim, self.device)
