@@ -23,7 +23,7 @@ class BufferManager:
             device (str or torch.device, optional): device where tensors will be allocated.
             dtype (torch.dtype, optional): data type of the tensors.
         """
-        self.dim = dim
+        self.dim = int(dim)
         self.device = device
         self.dtype = dtype
         self.buffers = []
