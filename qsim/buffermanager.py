@@ -37,7 +37,7 @@ class BufferManager:
         if key in cls._registry:
             return cls._registry[key]
 
-
+        dim = int(dim)
         dim = 1 << (dim - 1).bit_length()
     
         same_device_dtype = [
