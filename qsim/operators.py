@@ -111,8 +111,10 @@ class Operators():
         torch.add(1, tmp, alpha= -2, out=tmp)
 
         nout.mul_(tmp)
-
-        torch.mul(nout, -1j, out=out)
+        if isinstance(qubits, int):
+            torch.mul(nout, -1j, out=out)
+        else:
+            torch.mul(nout, (-1j) ** len(qubits), out=out)
         if out is psi:
             self.manager.release(nout)
 
