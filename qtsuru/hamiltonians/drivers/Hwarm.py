@@ -18,7 +18,7 @@ class Hwarm(Hamiltonian):
         self.thetas = self.calcular_thetas()
 
 
-    def calcular_thetas(self):
+    def calculate_thetas(self):
 
         thetas = [0] * len(self.cs)
 
