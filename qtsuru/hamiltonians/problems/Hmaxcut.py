@@ -32,7 +32,7 @@ class Hmaxcut(Hamiltonian):
     def __init__(self, 
                  num_vertices: int,
                  adjacency_matrix, 
-                 weigth: float = 1, 
+                 weight: float = 1, 
                  fix_vertex: bool = False,
                  consider_identity=False,
                  device="cpu"):
@@ -40,7 +40,7 @@ class Hmaxcut(Hamiltonian):
         self.num_vertices = num_vertices
         self.fix_vertex = fix_vertex
         self.adjacency_matrix = adjacency_matrix
-        self.weigth = weigth
+        self.weight = weight
         self.consider_identity = consider_identity
 
         L = num_vertices - self.fix_vertex
@@ -108,8 +108,8 @@ class Hmaxcut(Hamiltonian):
             out_chain.fill_(-identity_weigth)
             self.diag_hamiltonian.add_(out_chain)
 
-        if self.weigth != 1:
-            self.diag_hamiltonian.mul_(self.weigth)                
+        if self.weight != 1:
+            self.diag_hamiltonian.mul_(self.weight)                
 
         self.manager.release(out_chain)
         return self.diag_hamiltonian
