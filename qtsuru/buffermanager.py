@@ -89,7 +89,7 @@ class BufferManager:
         Returns:
             torch.Tensor: immutable index tensor.
         """
-        dtype = torch.int32 if dim < 2 ** 32 else torch.int64
+        dtype = torch.long
         key = (dim, str(device))
         if key not in cls._index_registry:
             cls._index_registry[key] = torch.arange(dim, device=device, dtype=dtype)
